@@ -1,0 +1,52 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Kelola Akun Tim Rekrutmen</h1>
+    <p>Super Admin SPK menyetujui atau menolak akun Tim Rekrutmen.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Daftar Akun Tim Rekrutmen</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Username</th>
+          <th>Unit Bisnis</th>
+          <th>Status Akun</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!users.length) { %>
+          <tr class="empty-table-row">
+            <td colspan="5">Belum Ada Akun Tim Rekrutmen</td>
+          </tr>
+        <% } %>
+        <% for (const account of users) { %>
+          <tr>
+            <td><strong><%= account.name %></strong></td>
+            <td><%= account.username %></td>
+            <td><span class="badge unit"><%= account.business_unit %></span></td>
+            <td>
+              <span class="badge account-<%= account.account_status %>">
+                <%= account.account_status === 'active' ? 'Disetujui' : account.account_status === 'rejected' ? 'Ditolak' : 'Menunggu' %>
+              </span>
+            </td>
+            <td>
+              <form method="post" action="/users/<%= account.id %>/status" class="account-action">
+                <input type="hidden" name="csrf" value="<%= csrf %>">
+                <input type="hidden" name="business_unit" value="<%= account.business_unit %>">
+                <button class="btn small" name="account_status" value="active">Setujui</button>
+                <button class="btn danger small" name="account_status" value="rejected">Tolak</button>
+              </form>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('partials/footer') %>

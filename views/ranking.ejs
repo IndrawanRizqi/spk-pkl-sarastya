@@ -1,0 +1,108 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Hasil Perangkingan MABAC</h1>
+    <p>Perangkingan dihitung terpisah berdasarkan periode dan unit bisnis.</p>
+  </div>
+</div>
+
+<div class="card filter-card no-print">
+  <form method="get" class="filter-grid">
+    <div class="field">
+      <label>Periode seleksi</label>
+      <select name="period_id" onchange="this.form.submit()">
+        <% for (const period of periods) { %>
+          <option value="<%= period.id %>" <%= periodId === period.id ? 'selected' : '' %>><%= period.name %> <%= period.year %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="field">
+      <label>Unit bisnis</label>
+      <% if (user.role === 'recruiter') { %>
+        <input type="hidden" name="business_unit" value="<%= businessUnit %>">
+        <input value="<%= businessUnit %>" disabled>
+      <% } else { %>
+        <select name="business_unit" onchange="this.form.submit()">
+          <% for (const unit of businessUnits) { %>
+            <option value="<%= unit %>" <%= businessUnit === unit ? 'selected' : '' %>><%= unit %></option>
+          <% } %>
+        </select>
+      <% } %>
+    </div>
+    <div class="field form-action">
+      <label>&nbsp;</label>
+      <button class="btn secondary" type="button" onclick="window.print()">Cetak Hasil</button>
+    </div>
+  </form>
+</div>
+
+<% if (!swaraReady) { %>
+  <div class="notice error">Perhitungan MABAC belum dapat dijalankan. Masukkan dan simpan bobot final SWARA pada menu Bobot Kriteria terlebih dahulu.</div>
+<% } else if (!result.rows.length) { %>
+  <div class="card"><p class="muted">Belum ada kandidat pada unit bisnis ini untuk dihitung.</p></div>
+<% } else { %>
+  <div class="card">
+    <h2>Rekomendasi Kandidat - <%= businessUnit %></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Peringkat</th>
+            <th>Kandidat</th>
+            <th>Instansi</th>
+            <th>Peminatan</th>
+            <th>Nilai Si</th>
+            <th>Status</th>
+            <% if (user.role === 'recruiter') { %><th class="no-print">Keputusan</th><% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const row of result.rows) { %>
+            <tr>
+              <td><div class="rank <%= row.rank === 1 ? 'first' : '' %>"><%= row.rank %></div></td>
+              <td><strong><%= row.candidate.name %></strong></td>
+              <td><%= row.candidate.institution %></td>
+              <td><%= row.candidate.interest %></td>
+              <td><strong><%= number(row.value,6) %></strong></td>
+              <td><span class="badge status-<%= row.candidate.selection_status %>"><%= row.candidate.selection_status === 'accepted' ? 'Diterima' : row.candidate.selection_status === 'rejected' ? 'Ditolak' : 'Menunggu' %></span></td>
+              <% if (user.role === 'recruiter') { %>
+                <td class="no-print">
+                  <div class="actions">
+                    <form method="post" action="/candidates/<%= row.candidate.id %>/status">
+                      <input type="hidden" name="csrf" value="<%= csrf %>">
+                      <input type="hidden" name="period_id" value="<%= periodId %>">
+                      <input type="hidden" name="business_unit" value="<%= businessUnit %>">
+                      <input type="hidden" name="status" value="accepted">
+                      <button class="btn small">Terima</button>
+                    </form>
+                    <form method="post" action="/candidates/<%= row.candidate.id %>/status">
+                      <input type="hidden" name="csrf" value="<%= csrf %>">
+                      <input type="hidden" name="period_id" value="<%= periodId %>">
+                      <input type="hidden" name="business_unit" value="<%= businessUnit %>">
+                      <input type="hidden" name="status" value="rejected">
+                      <button class="btn danger small">Tolak</button>
+                    </form>
+                  </div>
+                </td>
+              <% } %>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <details class="card no-print">
+    <summary><strong>Detail Border Approximation Area</strong></summary>
+    <div class="table-wrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>Kode</th><th>Kriteria</th><th>Bobot</th><th>BAA (Gj)</th></tr></thead>
+        <tbody>
+          <% for (const criterion of criteria) { %>
+            <tr><td><%= criterion.code %></td><td><%= criterion.name %></td><td><%= number(criterion.weight) %></td><td><%= number(result.details.baa[criterion.id],6) %></td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </details>
+<% } %>
+<%- include('partials/footer') %>

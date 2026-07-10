@@ -1,0 +1,99 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Penilaian Kandidat</h1>
+    <p>Masukkan nilai 1-5 berdasarkan 20 kriteria penilaian untuk kandidat ini.</p>
+  </div>
+  <a class="btn secondary" href="/candidates">Kembali ke Data Kandidat</a>
+</div>
+
+<div class="card candidate-profile">
+  <div>
+    <span class="muted">Nama Kandidat</span>
+    <strong><%= candidate.name %></strong>
+  </div>
+  <div>
+    <span class="muted">Instansi</span>
+    <strong><%= candidate.institution %></strong>
+  </div>
+  <div>
+    <span class="muted">Peminatan</span>
+    <strong><%= candidate.interest %></strong>
+  </div>
+  <div>
+    <span class="muted">Unit Bisnis</span>
+    <strong><%= candidate.business_unit %></strong>
+  </div>
+</div>
+
+<div class="card candidate-video-card">
+  <div>
+    <h2>Objek Pendukung Penilaian</h2>
+    <p class="muted">Gunakan video interview dan presentasi sebagai bahan observasi sebelum memberi skor pada 20 kriteria.</p>
+  </div>
+  <div class="video-links">
+    <% if (candidate.interview_video_url) { %>
+      <a class="btn secondary" href="<%= candidate.interview_video_url %>" target="_blank" rel="noopener noreferrer">Buka Video Interview</a>
+    <% } %>
+    <% if (candidate.presentation_video_url) { %>
+      <a class="btn secondary" href="<%= candidate.presentation_video_url %>" target="_blank" rel="noopener noreferrer">Buka Video Presentasi</a>
+    <% } %>
+    <% if (!candidate.interview_video_url && !candidate.presentation_video_url) { %>
+      <span class="badge status-pending">Video belum tersedia</span>
+    <% } %>
+  </div>
+</div>
+
+<form method="post" action="/candidates/<%= candidate.id %>/scores">
+  <input type="hidden" name="csrf" value="<%= csrf %>">
+  <div class="card">
+    <h2>Form Penilaian 20 Kriteria</h2>
+    <div class="candidate-score-list">
+      <% for (const criterion of criteria) { %>
+        <% const detail = criteriaDetails[criterion.code] || {}; %>
+        <% const currentScore = scores[criterion.id] ?? 3; %>
+        <details class="candidate-score-item">
+          <summary>
+            <div>
+              <strong><%= criterion.code %> <%= criterion.name %></strong>
+              <span class="badge <%= criterion.type === 'cost' ? 'cost' : '' %>"><%= criterion.type.toUpperCase() %></span>
+            </div>
+            <div class="score-select-wrap">
+              <label>Skor</label>
+              <select name="scores[<%= criterion.id %>]" onclick="event.stopPropagation()" required>
+                <% for (const score of [5, 4, 3, 2, 1]) { %>
+                  <option value="<%= score %>" <%= Number(currentScore) === score ? 'selected' : '' %>><%= score %></option>
+                <% } %>
+              </select>
+            </div>
+          </summary>
+          <div class="criteria-detail-body single">
+            <div class="criteria-description">
+              <h3>Deskripsi Kriteria</h3>
+              <p><%= detail.description || 'Deskripsi belum tersedia.' %></p>
+            </div>
+            <div>
+              <h3>Acuan Skor</h3>
+              <div class="table-wrap">
+                <table class="rubric-table">
+                  <thead><tr><th>Skor</th><th>Penjelasan</th></tr></thead>
+                  <tbody>
+                    <% for (const score of [5, 4, 3, 2, 1]) { %>
+                      <tr><td><span class="score-pill"><%= score %></span></td><td><%= detail.scores?.[score] || '-' %></td></tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </details>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <a class="btn secondary" href="/candidates">Batal</a>
+    <button class="btn">Simpan Penilaian Kandidat</button>
+  </div>
+</form>
+<%- include('partials/footer') %>

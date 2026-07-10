@@ -1,0 +1,71 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Penilaian Kandidat</h1>
+    <p>Masukkan skor 1-5 berdasarkan subkriteria untuk unit bisnis yang dipilih.</p>
+  </div>
+</div>
+
+<div class="card filter-card">
+  <form method="get" class="filter-grid">
+    <div class="field">
+      <label>Periode seleksi</label>
+      <select name="period_id" onchange="this.form.submit()">
+        <% for (const period of periods) { %>
+          <option value="<%= period.id %>" <%= periodId === period.id ? 'selected' : '' %>><%= period.name %> <%= period.year %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="field">
+      <label>Unit bisnis</label>
+      <% if (user.role === 'recruiter') { %>
+        <input type="hidden" name="business_unit" value="<%= businessUnit %>">
+        <input value="<%= businessUnit %>" disabled>
+      <% } else { %>
+        <select name="business_unit" onchange="this.form.submit()">
+          <% for (const unit of businessUnits) { %>
+            <option value="<%= unit %>" <%= businessUnit === unit ? 'selected' : '' %>><%= unit %></option>
+          <% } %>
+        </select>
+      <% } %>
+    </div>
+    <div class="field form-action">
+      <label>&nbsp;</label>
+      <button class="btn" type="button" form="scores-form" onclick="document.getElementById('scores-form')?.requestSubmit()">Simpan Penilaian</button>
+    </div>
+  </form>
+</div>
+
+<% if (!candidates.length) { %>
+  <div class="card"><p class="muted">Belum ada kandidat pada periode dan unit bisnis ini.</p></div>
+<% } else { %>
+  <form id="scores-form" method="post" action="/scores">
+    <input type="hidden" name="csrf" value="<%= csrf %>">
+    <input type="hidden" name="period_id" value="<%= periodId %>">
+    <input type="hidden" name="business_unit" value="<%= businessUnit %>">
+    <div class="scroll-hint">Geser tabel ke kanan atau kiri untuk melihat seluruh kandidat sebagai alternatif.</div>
+    <div class="card table-wrap score-table-wrap">
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th>Kriteria</th>
+            <% for (const candidate of candidates) { %>
+              <th><%= candidate.name %><small class="table-subtitle"><%= candidate.interest %></small></th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const criterion of criteria) { %>
+            <tr>
+              <td class="criteria-name"><strong><%= criterion.code %></strong> <%= criterion.name %> <span class="badge <%= criterion.type === 'cost' ? 'cost' : '' %>"><%= criterion.type.toUpperCase() %></span></td>
+              <% for (const candidate of candidates) { %>
+                <td><input class="score-input" type="number" min="1" max="5" name="scores[<%= candidate.id %>][<%= criterion.id %>]" value="<%= scores[candidate.id]?.[criterion.id] ?? 3 %>" required></td>
+              <% } %>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </form>
+<% } %>
+<%- include('partials/footer') %>

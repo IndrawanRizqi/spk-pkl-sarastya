@@ -1,0 +1,154 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Data Kandidat</h1>
+    <p>Import data pendaftar dari spreadsheet Google Form, lalu lengkapi penilaian untuk proses MABAC.</p>
+  </div>
+</div>
+
+<% if (user.role === 'super_admin') { %>
+  <div class="card import-card">
+    <h2>Import Excel Google Form</h2>
+    <p class="muted">Gunakan file hasil unduhan Google Form. Sistem membaca data pendaftar, berkas wajib, serta link video interview dan presentasi jika tersedia.</p>
+    <form method="post" action="/candidates/import" enctype="multipart/form-data" class="form-grid">
+      <input type="hidden" name="csrf" value="<%= csrf %>">
+      <input type="hidden" name="period_id" value="<%= importPeriodId %>">
+      <div class="field">
+        <label>File Excel</label>
+        <input type="file" name="spreadsheet" accept=".xlsx,.xls,.csv" required>
+      </div>
+      <div class="field form-action">
+        <label>&nbsp;</label>
+        <button class="btn">Import Data Pendaftar</button>
+      </div>
+    </form>
+  </div>
+<% } %>
+
+<div class="card">
+  <h2>Daftar Kandidat</h2>
+  <form method="get" class="candidate-search-grid">
+    <% if (user.role === 'recruiter') { %>
+      <input type="hidden" name="business_unit" value="<%= user.business_unit %>">
+    <% } %>
+    <div class="field">
+      <label>Cari kandidat atau instansi</label>
+      <input name="q" value="<%= filters.query %>" placeholder="Ketik nama kandidat, asal instansi, jurusan, atau peminatan">
+    </div>
+    <div class="field">
+      <label>Jenis instansi</label>
+      <select name="institution_type">
+        <option value="" <%= !filters.institutionType ? 'selected' : '' %>>Semua jenis</option>
+        <option value="smk" <%= filters.institutionType === 'smk' ? 'selected' : '' %>>SMK</option>
+        <option value="university" <%= filters.institutionType === 'university' ? 'selected' : '' %>>Perguruan Tinggi</option>
+      </select>
+    </div>
+    <% if (user.role === 'super_admin') { %>
+      <div class="field">
+        <label>Unit bisnis</label>
+        <select name="business_unit">
+          <option value="" <%= !filters.businessUnit ? 'selected' : '' %>>Semua unit</option>
+          <% for (const unit of businessUnits) { %>
+            <option value="<%= unit %>" <%= filters.businessUnit === unit ? 'selected' : '' %>><%= unit %></option>
+          <% } %>
+        </select>
+      </div>
+    <% } %>
+    <div class="field">
+      <label>Periode pendaftaran</label>
+      <select name="period_id">
+        <option value="" <%= !filters.periodId ? 'selected' : '' %>>Semua periode</option>
+        <% for (const period of periods) { %>
+          <option value="<%= period.id %>" <%= filters.periodId === period.id ? 'selected' : '' %>><%= period.name %> <%= period.year %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="field form-action">
+      <label>&nbsp;</label>
+      <div class="actions">
+        <button class="btn">Cari</button>
+        <a class="btn secondary" href="/candidates">Reset</a>
+      </div>
+    </div>
+  </form>
+  <p class="muted table-count">Menampilkan <strong><%= candidates.length %></strong> kandidat unik sesuai filter.</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Instansi</th>
+          <th>Jenis</th>
+          <th>Jurusan</th>
+          <th>Peminatan</th>
+          <th>Unit Bisnis</th>
+          <th>Periode</th>
+          <th>Video</th>
+          <th>Penilaian</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!candidates.length) { %>
+          <tr class="empty-table-row">
+            <td colspan="11">Data Tidak Ditemukan</td>
+          </tr>
+        <% } %>
+        <% for (const candidate of candidates) { %>
+          <tr>
+            <td>
+              <% if (candidate.document_status === 'failed') { %>
+                <div class="candidate-link disabled"><strong><%= candidate.name %></strong><span><%= candidate.document_note %></span></div>
+              <% } else { %>
+                <a class="candidate-link" href="/candidates/<%= candidate.id %>/scores"><strong><%= candidate.name %></strong><span>Isi nilai kriteria</span></a>
+              <% } %>
+            </td>
+            <td><%= candidate.institution %></td>
+            <td><span class="badge"><%= candidate.institution_type === 'smk' ? 'SMK' : 'Perguruan Tinggi' %></span></td>
+            <td><%= candidate.major %></td>
+            <td><%= candidate.interest %></td>
+            <td><span class="badge unit"><%= candidate.business_unit %></span></td>
+            <td><%= candidate.period_name %> <%= candidate.year %></td>
+            <td>
+              <div class="video-links">
+                <% if (candidate.interview_video_url) { %>
+                  <a class="btn secondary small" href="<%= candidate.interview_video_url %>" target="_blank" rel="noopener noreferrer">Interview</a>
+                <% } %>
+                <% if (candidate.presentation_video_url) { %>
+                  <a class="btn secondary small" href="<%= candidate.presentation_video_url %>" target="_blank" rel="noopener noreferrer">Presentasi</a>
+                <% } %>
+                <% if (!candidate.interview_video_url && !candidate.presentation_video_url) { %>
+                  <span class="muted">-</span>
+                <% } %>
+              </div>
+            </td>
+            <td>
+              <% if (candidate.document_status === 'failed') { %>
+                <span class="badge status-rejected">Tidak dinilai</span>
+              <% } else { %>
+                <span class="badge <%= Number(candidate.score_count) >= criteriaCount ? 'status-accepted' : 'status-pending' %>"><%= candidate.score_count %>/<%= criteriaCount %> kriteria</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (candidate.document_status === 'failed') { %>
+                <span class="badge status-rejected">Gugur Berkas</span>
+              <% } else { %>
+                <span class="badge status-<%= candidate.selection_status %>"><%= candidate.selection_status === 'accepted' ? 'Diterima' : candidate.selection_status === 'rejected' ? 'Ditolak' : 'Menunggu' %></span>
+              <% } %>
+            </td>
+            <td>
+              <% if (user.role === 'super_admin') { %>
+                <form method="post" action="/candidates/<%= candidate.id %>/delete" onsubmit="return confirm('Hapus kandidat?')">
+                  <input type="hidden" name="csrf" value="<%= csrf %>">
+                  <button class="btn danger small">Hapus</button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('partials/footer') %>

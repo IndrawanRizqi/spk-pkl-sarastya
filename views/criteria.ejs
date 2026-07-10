@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Kriteria dan Subkriteria</h1>
+    <p>Klik setiap kriteria untuk melihat deskripsi dan acuan skor penilaian.</p>
+  </div>
+</div>
+
+<div class="criteria-list">
+  <% for (const criterion of criteria) { %>
+    <% const detail = criteriaDetails[criterion.code] || {}; %>
+    <details class="card criteria-detail-card">
+      <summary>
+        <span class="criteria-code"><%= criterion.code %></span>
+        <span class="criteria-title"><%= criterion.name %></span>
+        <span class="badge <%= criterion.type === 'cost' ? 'cost' : '' %>"><%= criterion.type.toUpperCase() %></span>
+        <span class="criteria-weight">Bobot: <strong><%= number(criterion.weight) %></strong></span>
+      </summary>
+
+      <div class="criteria-detail-body">
+        <div class="criteria-description">
+          <h3>Deskripsi Kriteria</h3>
+          <p><%= detail.description || 'Deskripsi belum tersedia.' %></p>
+        </div>
+
+        <div>
+          <h3>Subkriteria Skor Penilaian</h3>
+          <div class="table-wrap">
+            <table class="rubric-table">
+              <thead>
+                <tr>
+                  <th>Skor</th>
+                  <th>Penjelasan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% for (const score of [5, 4, 3, 2, 1]) { %>
+                  <tr>
+                    <td><span class="score-pill"><%= score %></span></td>
+                    <td><%= detail.scores?.[score] || (grouped[criterion.id] || []).find((item) => Number(item.score) === score)?.label || '-' %></td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </details>
+  <% } %>
+</div>
+<%- include('partials/footer') %>

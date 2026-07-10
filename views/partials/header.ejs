@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | SPK Sarastya</title>
+  <link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><img class="brand-logo" src="/public/sarastya-logo.png" alt="Logo Sarastya Agility Innovations"><div><strong>Sistem Pendukung Keputusan</strong><span>Rekrutmen PKL/Magang<br>Sarastya Agility Innovations</span></div></div>
+    <div class="nav-label">MENU UTAMA</div>
+    <% const links = [['dashboard','Ringkasan'],['periods','Periode Seleksi'],['users','Kelola Akun'],['candidates','Data Kandidat'],['criteria','Kriteria'],['swara','Bobot Kriteria'],['ranking','Hasil MABAC']]; %>
+    <% for (const [route,label] of links) { %>
+      <% if (!(user.role === 'recruiter' && ['periods','users','swara'].includes(route))) { %>
+        <a class="nav-link <%= page === route ? 'active' : '' %>" href="/<%= route %>"><%= label %></a>
+      <% } %>
+    <% } %>
+    <div class="nav-label">AKUN</div><a class="nav-link" href="/logout">Keluar</a>
+  </aside>
+  <main class="main">
+    <header class="topbar"><strong><%= title %></strong><div class="user-chip"><strong><%= user.role === 'super_admin' ? 'HG Sarastya' : `Tim Rekrutmen - ${user.business_unit}` %></strong></div></header>
+    <section class="content">
+      <% if (flash) { %><div class="notice <%= flash.type === 'error' ? 'error' : '' %>"><%= flash.message %></div><% } %>

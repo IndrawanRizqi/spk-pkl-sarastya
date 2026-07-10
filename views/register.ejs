@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Daftar Akun | SPK Sarastya</title>
+  <link rel="stylesheet" href="/public/style.css">
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <img class="login-logo" src="/public/sarastya-logo.png" alt="Logo Sarastya Agility Innovations">
+    <h1>Daftar Tim Rekrutmen</h1>
+    <p>Buat akun Tim Rekrutmen sesuai unit bisnis yang ditangani. Akun akan aktif setelah disetujui Super Admin SPK.</p>
+    <% if (flash) { %><div class="notice <%= flash.type === 'error' ? 'error' : '' %>"><%= flash.message %></div><% } %>
+    <form method="post" action="/register">
+      <input type="hidden" name="csrf" value="<%= csrf %>">
+      <div class="field">
+        <label>Nama lengkap</label>
+        <input name="name" minlength="3" required autofocus>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label>Unit bisnis</label>
+        <select name="business_unit" required>
+          <% for (const unit of businessUnits) { %>
+            <option value="<%= unit %>"><%= unit %></option>
+          <% } %>
+        </select>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label>Username</label>
+        <input name="username" minlength="4" required>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label>Password</label>
+        <input type="password" name="password" minlength="8" required>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label>Konfirmasi password</label>
+        <input type="password" name="password_confirmation" minlength="8" required>
+      </div>
+      <button class="btn" style="width:100%;margin-top:22px">Daftar</button>
+    </form>
+    <p class="auth-switch">Sudah memiliki akun? <a href="/login">Masuk di sini</a></p>
+  </div>
+</body>
+</html>

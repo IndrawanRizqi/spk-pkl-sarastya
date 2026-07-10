@@ -1,0 +1,73 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Periode Seleksi</h1>
+    <p>Kelompokkan kandidat berdasarkan gelombang penerimaan.</p>
+  </div>
+</div>
+
+<div class="grid two-col">
+  <div class="card">
+    <h2>Daftar Periode</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Periode</th>
+            <th>Tahun</th>
+            <th>Status</th>
+            <th>Kandidat</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const period of periods) { %>
+            <tr>
+              <td><%= period.name %></td>
+              <td><%= period.year %></td>
+              <td><span class="badge"><%= period.status %></span></td>
+              <td><%= period.candidate_count %></td>
+              <td>
+                <div class="actions">
+                  <% if (period.status === 'active') { %>
+                    <form method="post" action="/periods/<%= period.id %>/close" onsubmit="return confirm('Tutup periode aktif ini?')">
+                      <input type="hidden" name="csrf" value="<%= csrf %>">
+                      <button class="btn secondary small">Tutup</button>
+                    </form>
+                  <% } else { %>
+                    <span class="muted">Ditutup</span>
+                  <% } %>
+                  <form method="post" action="/periods/<%= period.id %>/delete" onsubmit="return confirm('Hapus periode dan seluruh data kandidat terkait?')">
+                    <input type="hidden" name="csrf" value="<%= csrf %>">
+                    <button class="btn danger small">Hapus</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Tambah Periode</h2>
+    <form method="post" action="/periods">
+      <input type="hidden" name="csrf" value="<%= csrf %>">
+      <div class="field">
+        <label>Nama periode</label>
+        <select name="name" required>
+          <% for (const option of periodNameOptions) { %>
+            <option value="<%= option %>"><%= option %></option>
+          <% } %>
+        </select>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label>Tahun</label>
+        <input type="number" name="year" value="2026" required>
+      </div>
+      <button class="btn" style="margin-top:18px">Simpan Periode</button>
+    </form>
+  </div>
+</div>
+<%- include('partials/footer') %>

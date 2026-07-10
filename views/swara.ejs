@@ -1,0 +1,41 @@
+<%- include('partials/header') %>
+
+<div class="page-head"><div><h1>Bobot Kriteria</h1><p>Masukkan bobot akhir SWARA yang telah dihitung dan divalidasi melalui workbook Excel.</p></div></div>
+
+<div class="notice">Perhitungan ranking decision maker, rata-rata, ranking final, Sj, Kj, Qj, dan Wj dilakukan di Excel. Sistem hanya menyimpan bobot final Wj untuk proses MABAC.</div>
+
+<div class="grid two-col weight-overview">
+  <div class="stat"><span>Total Bobot</span><strong id="weight-total"><%= number(totalWeight,6) %></strong></div>
+  <div class="stat"><span>Status MABAC</span><strong id="weight-status" class="<%= state.weights_ready ? 'status-valid' : '' %>"><%= state.weights_ready ? 'Siap' : 'Belum siap' %></strong></div>
+</div>
+
+<form method="post" action="/swara/weights" id="weights-form">
+  <input type="hidden" name="csrf" value="<%= csrf %>">
+  <div class="card table-wrap" style="margin-top:18px">
+    <table><thead><tr><th>No.</th><th>Kode</th><th>Kriteria</th><th>Jenis</th><th>Bobot Final SWARA</th></tr></thead><tbody>
+      <% criteria.forEach((criterion,index) => { %><tr><td><%= index + 1 %></td><td><strong><%= criterion.code %></strong></td><td class="criteria-name"><%= criterion.name %></td><td><span class="badge <%= criterion.type === 'cost' ? 'cost' : '' %>"><%= criterion.type.toUpperCase() %></span></td><td><input class="weight-input" data-weight type="number" min="0" max="1" step="0.000001" name="weights[<%= criterion.id %>]" value="<%= number(criterion.weight,6) %>" required></td></tr><% }) %>
+    </tbody><tfoot><tr><td colspan="4"><strong>Total Bobot</strong></td><td><strong id="weight-table-total"><%= number(totalWeight,6) %></strong></td></tr></tfoot></table>
+  </div>
+  <div class="actions"><button class="btn" id="save-weights">Simpan Bobot Final</button><span class="muted">Total bobot wajib sama dengan 1,000000.</span></div>
+</form>
+
+<script>
+  const weightInputs = [...document.querySelectorAll('[data-weight]')];
+  const totalHeader = document.getElementById('weight-total');
+  const totalTable = document.getElementById('weight-table-total');
+  const status = document.getElementById('weight-status');
+  const button = document.getElementById('save-weights');
+  function updateWeightTotal() {
+    const total = weightInputs.reduce((sum, input) => sum + (Number(input.value) || 0), 0);
+    const valid = Math.abs(total - 1) <= 0.000001;
+    totalHeader.textContent = total.toFixed(6);
+    totalTable.textContent = total.toFixed(6);
+    status.textContent = valid ? 'Siap disimpan' : 'Total belum 1';
+    status.classList.toggle('status-valid', valid);
+    button.disabled = !valid;
+  }
+  weightInputs.forEach((input) => input.addEventListener('input', updateWeightTotal));
+  updateWeightTotal();
+</script>
+
+<%- include('partials/footer') %>
