@@ -2,7 +2,6 @@
 <div class="page-head dashboard-head">
   <div>
     <h1>Dashboard Rekrutmen PKL/Magang</h1>
-    <p>Ringkasan keputusan seleksi dan asal instansi pendaftar berdasarkan periode.</p>
   </div>
   <form method="get" class="dashboard-filter">
     <label>Filter Periode</label>
@@ -43,7 +42,6 @@
 <div class="dashboard-charts">
   <div class="card chart-card">
     <h2>Jumlah Pendaftar SMK & Perguruan Tinggi</h2>
-    <p class="muted">Disesuaikan dengan periode yang dipilih.</p>
     <div class="bar-chart">
       <% for (const item of institutionChart) { %>
         <div class="bar-row">
@@ -59,7 +57,6 @@
 
   <div class="card chart-card">
     <h2>Pendaftar Diterima & Ditolak</h2>
-    <p class="muted">Ringkasan keputusan seleksi pada periode terpilih.</p>
     <div class="bar-chart">
       <% for (const item of statusChart) { %>
         <div class="bar-row">
@@ -75,7 +72,6 @@
 
   <div class="card chart-card wide">
     <h2>Pendaftar Diterima & Ditolak Setiap Unit Bisnis</h2>
-    <p class="muted">Perbandingan keputusan seleksi untuk setiap unit bisnis pada periode terpilih.</p>
     <div class="unit-chart">
       <% for (const item of unitStatusChart) { %>
         <div class="unit-row">
