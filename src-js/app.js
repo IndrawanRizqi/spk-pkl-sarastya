@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import multer from 'multer';
 import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hashPassword, initializeDatabase, pool, verifyPassword } from './database.js';
@@ -12,8 +13,11 @@ import { criteriaDetails } from './services/criteriaDetails.js';
 import { calculateMabac, validateWeights } from './services/decisionSupport.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const importDir = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'spk-sarastya-imports')
+  : path.join(root, 'tmp', 'imports');
 await initializeDatabase();
-await fs.mkdir(path.join(root, 'tmp', 'imports'), { recursive: true });
+await fs.mkdir(importDir, { recursive: true });
 
 const app = express();
 const PgSessionStore = connectPgSimple(session);
@@ -22,7 +26,7 @@ const PERIOD_NAME_OPTIONS = [
   'Gelombang 2 (Juli-Desember)',
 ];
 const upload = multer({
-  dest: path.join(root, 'tmp', 'imports'),
+  dest: importDir,
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
@@ -32,6 +36,7 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(root, 'public')));
 app.use('/public', express.static(path.join(root, 'public')));
 app.use(session({
   store: new PgSessionStore({ pool, tableName: 'user_sessions', createTableIfMissing: true }),
@@ -737,15 +742,19 @@ app.use((error, req, res, next) => {
   res.status(500).send('Terjadi kesalahan pada server. Periksa koneksi database dan log aplikasi.');
 });
 
-const port = Number(process.env.PORT || 3000);
-const server = app.listen(port, () => console.log(`SPK Sarastya berjalan di http://localhost:${port}`));
+if (!process.env.VERCEL) {
+  const port = Number(process.env.PORT || 3000);
+  const server = app.listen(port, () => console.log(`SPK Sarastya berjalan di http://localhost:${port}`));
 
-async function shutdown() {
-  server.close(async () => {
-    await pool.end();
-    process.exit(0);
-  });
+  async function shutdown() {
+    server.close(async () => {
+      await pool.end();
+      process.exit(0);
+    });
+  }
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+export default app;
