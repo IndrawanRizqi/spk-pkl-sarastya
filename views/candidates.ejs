@@ -63,6 +63,15 @@
         <% } %>
       </select>
     </div>
+    <div class="field">
+      <label>Status kandidat</label>
+      <select name="status">
+        <option value="" <%= !filters.status ? 'selected' : '' %>>Semua status</option>
+        <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>Menunggu</option>
+        <option value="accepted" <%= filters.status === 'accepted' ? 'selected' : '' %>>Diterima</option>
+        <option value="not_passed" <%= filters.status === 'not_passed' ? 'selected' : '' %>>Tidak Lolos</option>
+      </select>
+    </div>
     <div class="field form-action">
       <label>&nbsp;</label>
       <div class="actions">

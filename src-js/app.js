@@ -357,6 +357,7 @@ app.get('/candidates', requireAuth, requireRecruitmentAccess, async (req, res) =
       ? req.session.user.business_unit
       : BUSINESS_UNITS.includes(req.query.business_unit) ? req.query.business_unit : '',
     periodId: Number(req.query.period_id || 0),
+    status: ['not_passed', 'pending', 'accepted'].includes(req.query.status) ? req.query.status : '',
   };
   const conditions = [];
   const params = [];
@@ -375,6 +376,13 @@ app.get('/candidates', requireAuth, requireRecruitmentAccess, async (req, res) =
   if (filters.periodId) {
     params.push(filters.periodId);
     conditions.push(`c.period_id=$${params.length}`);
+  }
+  if (filters.status === 'not_passed') {
+    conditions.push(`(c.document_status='failed' OR c.selection_status='rejected')`);
+  } else if (filters.status === 'pending') {
+    conditions.push(`c.document_status<>'failed' AND c.selection_status='pending'`);
+  } else if (filters.status === 'accepted') {
+    conditions.push(`c.document_status<>'failed' AND c.selection_status='accepted'`);
   }
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const [{ rows: periods }, { rows: candidates }, { rows: [{ total: criteriaCount }] }] = await Promise.all([
@@ -399,7 +407,11 @@ app.get('/candidates', requireAuth, requireRecruitmentAccess, async (req, res) =
           ) AS duplicate_rank
         FROM candidate_rows
       )
-      SELECT * FROM unique_candidates WHERE duplicate_rank=1 ORDER BY id DESC`, params),
+      SELECT * FROM unique_candidates
+      WHERE duplicate_rank=1
+      ORDER BY
+        CASE WHEN document_status='failed' OR selection_status='rejected' THEN 1 ELSE 0 END,
+        id DESC`, params),
     pool.query('SELECT COUNT(*)::int AS total FROM criteria'),
   ]);
   const importPeriodId = filters.periodId || periods.find((period) => period.status === 'active')?.id || periods[0]?.id || 0;
