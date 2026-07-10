@@ -38,7 +38,7 @@ const HEADER_ALIASES = {
   portfolioFile: ['portofolio', 'portfolio'],
   photoFile: ['foto 4x6 terbaru', 'foto 4x6', 'foto'],
   interviewVideoUrl: ['4 link pengumpulan', 'link pengumpulan video interview', 'link video interview', 'video interview', 'sesi interview'],
-  presentationVideoUrl: ['link presentasi', 'video presentasi', 'presentasi tugas', 'link pengumpulan video presentasi', 'link video presentasi'],
+  presentationVideoUrl: ['link presentasi', 'video presentasi', 'presentasi tugas', 'presentasi', 'presentation', 'link pengumpulan video presentasi', 'link video presentasi'],
 };
 
 function normalizeText(value) {
@@ -85,6 +85,14 @@ function readFirstFilledCell(row, indices) {
   for (const index of indices) {
     const value = readCell(row, index);
     if (value) return value;
+  }
+  return '';
+}
+
+function readFirstUrlCell(row, indices) {
+  for (const index of indices) {
+    const value = readCell(row, index);
+    if (/https?:\/\//i.test(value)) return value;
   }
   return '';
 }
@@ -166,8 +174,8 @@ export function parseCandidateSpreadsheet(filePath, options = {}) {
       transcriptFile: readFirstFilledCell(row, mapping.transcriptFile),
       portfolioFile: readFirstFilledCell(row, mapping.portfolioFile),
       photoFile: readFirstFilledCell(row, mapping.photoFile),
-      interviewVideoUrl: readFirstFilledCell(row, mapping.interviewVideoUrl),
-      presentationVideoUrl: readFirstFilledCell(row, mapping.presentationVideoUrl),
+      interviewVideoUrl: readFirstUrlCell(row, mapping.interviewVideoUrl),
+      presentationVideoUrl: readFirstUrlCell(row, mapping.presentationVideoUrl),
     };
     Object.assign(candidate, evaluateDocumentStatus(candidate));
 
