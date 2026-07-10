@@ -11,7 +11,7 @@
   <aside class="sidebar">
     <div class="sidebar-brand"><img class="brand-logo" src="/sarastya-logo.png" alt="Logo Sarastya Agility Innovations"><div><strong>Sistem Pendukung Keputusan</strong><span>Rekrutmen PKL/Magang<br>Sarastya Agility Innovations</span></div></div>
     <div class="nav-label">MENU UTAMA</div>
-    <% const links = [['dashboard','Ringkasan'],['periods','Periode Seleksi'],['users','Kelola Akun'],['candidates','Data Kandidat'],['criteria','Kriteria'],['swara','Bobot Kriteria'],['ranking','Hasil MABAC']]; %>
+    <% const links = [['dashboard','Dashboard Rekrutmen'],['periods','Periode Seleksi'],['users','Kelola Akun Tim Rekrutmen'],['candidates','Data Kandidat'],['criteria','Kriteria'],['swara','Bobot Kriteria'],['ranking','Rangking Penilaian']]; %>
     <% for (const [route,label] of links) { %>
       <% if (!(user.role === 'recruiter' && ['periods','users','swara'].includes(route))) { %>
         <a class="nav-link <%= page === route ? 'active' : '' %>" href="/<%= route %>"><%= label %></a>

@@ -171,7 +171,7 @@ app.get('/users', requireAuth, superAdminOnly, async (req, res) => {
   const { rows: users } = await pool.query(
     "SELECT id,username,name,role,business_unit,account_status,created_at FROM users WHERE role='recruiter' ORDER BY account_status DESC,created_at DESC,id DESC",
   );
-  res.render('users', { title: 'Kelola Akun', page: 'users', users });
+  res.render('users', { title: 'Kelola Akun Tim Rekrutmen', page: 'users', users });
 });
 
 app.post('/users/:id/status', requireAuth, superAdminOnly, requireCsrf, async (req, res) => {
@@ -745,7 +745,7 @@ app.get('/ranking', requireAuth, async (req, res) => {
   for (const row of scoreRows) (scores[row.candidate_id] ??= {})[row.criterion_id] = row.score;
   const swaraReady = swaraState.weights_ready;
   const result = swaraReady ? calculateMabac(candidates, criteria, scores) : { rows: [], details: {} };
-  res.render('ranking', { title: 'Hasil MABAC', page: 'ranking', periods, periodId, businessUnit, criteria, result, swaraReady });
+  res.render('ranking', { title: 'Rangking Penilaian', page: 'ranking', periods, periodId, businessUnit, criteria, result, swaraReady });
 });
 
 app.use((req, res) => res.status(404).send('Halaman tidak ditemukan.'));
