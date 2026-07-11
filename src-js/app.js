@@ -719,15 +719,20 @@ app.post('/swara/weights', requireAuth, superAdminOnly, requireCsrf, async (req,
   const values = criteria.map((criterion) => req.body.weights?.[criterion.id]);
   const validation = validateWeights(values, criteria.length);
   if (!validation.valid) {
-    flash(req, `Bobot harus berisi angka 0-1 dan totalnya tepat 1. Total saat ini: ${validation.total.toFixed(6)}.`, 'error');
+    const invalidCriteria = validation.invalidIndexes
+      .map((index) => criteria[index]?.code)
+      .filter(Boolean);
+    const totalText = Number.isFinite(validation.total) ? validation.total.toFixed(6) : 'tidak dapat dihitung';
+    const invalidText = invalidCriteria.length ? ` Periksa bobot: ${invalidCriteria.join(', ')}.` : '';
+    flash(req, `Bobot harus berisi angka 0-1 dan totalnya mendekati 1. Total saat ini: ${totalText}.${invalidText}`, 'error');
     return res.redirect('/swara');
   }
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    for (const criterion of criteria) {
-      await client.query('UPDATE criteria SET weight=$1 WHERE id=$2', [Number(req.body.weights[criterion.id]), criterion.id]);
+    for (const [index, criterion] of criteria.entries()) {
+      await client.query('UPDATE criteria SET weight=$1 WHERE id=$2', [validation.weights[index], criterion.id]);
     }
     await client.query(`UPDATE swara_process_state SET weights_ready=TRUE,
       updated_at=CURRENT_TIMESTAMP WHERE id=1`);
@@ -783,22 +788,41 @@ app.post('/scores', requireAuth, requireRecruitmentAccess, requireCsrf, async (r
   res.redirect(`/scores?period_id=${Number(req.body.period_id)}&business_unit=${unit}`);
 });
 
+app.post('/ranking/quota', requireAuth, requireRecruitmentAccess, requireCsrf, async (req, res) => {
+  const periodId = Number(req.body.period_id);
+  const businessUnit = scopedBusinessUnit(req, req.body.business_unit);
+  const quota = Math.max(0, Number(req.body.quota || 0));
+
+  await pool.query(
+    `INSERT INTO recruitment_quotas (period_id,business_unit,quota,updated_at)
+     VALUES ($1,$2,$3,CURRENT_TIMESTAMP)
+     ON CONFLICT (period_id,business_unit)
+     DO UPDATE SET quota=EXCLUDED.quota, updated_at=CURRENT_TIMESTAMP`,
+    [periodId, businessUnit, quota],
+  );
+
+  flash(req, 'Kuota penerimaan berhasil disimpan.');
+  res.redirect(`/ranking?period_id=${periodId}&business_unit=${encodeURIComponent(businessUnit)}`);
+});
+
 app.get('/ranking', requireAuth, async (req, res) => {
   const { rows: periods } = await pool.query('SELECT * FROM periods ORDER BY year DESC,id DESC');
   const periodId = Number(req.query.period_id || periods[0]?.id || 0);
   const businessUnit = scopedBusinessUnit(req, req.query.business_unit);
-  const [{ rows: candidates }, { rows: criteria }, { rows: scoreRows }, { rows: [swaraState] }] = await Promise.all([
+  const [{ rows: candidates }, { rows: criteria }, { rows: scoreRows }, { rows: [swaraState] }, { rows: [quotaRow] }] = await Promise.all([
     pool.query("SELECT * FROM candidates WHERE period_id=$1 AND business_unit=$2 AND document_status<>'failed' ORDER BY name", [periodId, businessUnit]),
     pool.query('SELECT * FROM criteria ORDER BY priority_order'),
     pool.query(`SELECT cs.* FROM candidate_scores cs JOIN candidates c ON c.id=cs.candidate_id
       WHERE c.period_id=$1 AND c.business_unit=$2 AND c.document_status<>'failed'`, [periodId, businessUnit]),
     pool.query('SELECT * FROM swara_process_state WHERE id=1'),
+    pool.query('SELECT * FROM recruitment_quotas WHERE period_id=$1 AND business_unit=$2', [periodId, businessUnit]),
   ]);
   const scores = {};
   for (const row of scoreRows) (scores[row.candidate_id] ??= {})[row.criterion_id] = row.score;
   const swaraReady = swaraState.weights_ready;
   const result = swaraReady ? calculateMabac(candidates, criteria, scores) : { rows: [], details: {} };
-  res.render('ranking', { title: 'Rangking Penilaian', page: 'ranking', periods, periodId, businessUnit, criteria, result, swaraReady });
+  const quota = Number(quotaRow?.quota || 0);
+  res.render('ranking', { title: 'Rangking Penilaian', page: 'ranking', periods, periodId, businessUnit, criteria, result, swaraReady, quota });
 });
 
 app.use((req, res) => res.status(404).send('Halaman tidak ditemukan.'));

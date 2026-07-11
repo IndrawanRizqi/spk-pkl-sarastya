@@ -1,11 +1,28 @@
-export function validateWeights(values, expectedCount, tolerance = 0.000001) {
-  const weights = values.map(Number);
+export const WEIGHT_TOTAL_TOLERANCE = 0.00001;
+
+export function parseWeight(value) {
+  if (typeof value === 'number') return value;
+  if (typeof value !== 'string') return Number.NaN;
+  const normalized = value.trim().replace(',', '.');
+  if (!normalized) return Number.NaN;
+  return Number(normalized);
+}
+
+export function validateWeights(values, expectedCount, tolerance = WEIGHT_TOTAL_TOLERANCE) {
+  const weights = values.map(parseWeight);
   const total = weights.reduce((sum, value) => sum + value, 0);
+  const invalidIndexes = weights
+    .map((value, index) => ({ value, index }))
+    .filter(({ value }) => !Number.isFinite(value) || value < 0 || value > 1)
+    .map(({ index }) => index);
+
   return {
     valid: weights.length === expectedCount
-      && weights.every((value) => Number.isFinite(value) && value >= 0 && value <= 1)
+      && invalidIndexes.length === 0
       && Math.abs(total - 1) <= tolerance,
     total,
+    weights,
+    invalidIndexes,
   };
 }
 
