@@ -19,12 +19,14 @@
     <% } %>
   </aside>
   <main class="main">
-    <% const profileLabel = user.role === 'super_admin' ? 'HG Sarastya' : `Tim Rekrutmen - ${user.business_unit}`; %>
+    <% const profileName = user.name || (user.role === 'super_admin' ? 'HG Sarastya' : 'Tim Rekrutmen'); %>
+    <% const profileLabel = user.role === 'super_admin' ? profileName : `${profileName} - ${user.business_unit}`; %>
+    <% const profileInitials = profileName.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase(); %>
     <header class="topbar">
       <strong><%= title %></strong>
       <details class="profile-menu">
         <summary>
-          <span class="profile-avatar"><%= user.role === 'super_admin' ? 'HG' : 'TR' %></span>
+          <span class="profile-avatar"><%= profileInitials %></span>
           <span class="profile-summary-text">
             <strong><%= profileLabel %></strong>
             <small><%= user.username %></small>
