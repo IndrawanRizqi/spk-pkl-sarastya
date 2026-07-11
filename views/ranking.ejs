@@ -73,6 +73,7 @@
             <th>Kandidat</th>
             <th>Instansi</th>
             <th>Peminatan</th>
+            <th>Penilai</th>
             <th>Nilai Si</th>
             <th>Rekomendasi Sistem</th>
             <th>Status</th>
@@ -86,6 +87,15 @@
               <td><strong><%= row.candidate.name %></strong></td>
               <td><%= row.candidate.institution %></td>
               <td><%= row.candidate.interest %></td>
+              <td>
+                <% const scorer = (scorers || {})[row.candidate.id]; %>
+                <% if (scorer) { %>
+                  <strong><%= scorer.name %></strong>
+                  <small class="table-subtitle"><%= scorer.username %></small>
+                <% } else { %>
+                  <span class="muted">Belum tercatat</span>
+                <% } %>
+              </td>
               <td><strong><%= number(row.value,6) %></strong></td>
               <td>
                 <% if (!quota) { %>

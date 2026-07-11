@@ -128,8 +128,13 @@ CREATE TABLE IF NOT EXISTS candidate_scores (
   candidate_id INTEGER NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
   criterion_id INTEGER NOT NULL REFERENCES criteria(id) ON DELETE CASCADE,
   score NUMERIC(4, 2) NOT NULL CHECK (score BETWEEN 1 AND 5),
+  scored_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  scored_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (candidate_id, criterion_id)
 );
+
+ALTER TABLE candidate_scores ADD COLUMN IF NOT EXISTS scored_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE candidate_scores ADD COLUMN IF NOT EXISTS scored_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 CREATE TABLE IF NOT EXISTS swara_process_state (
   id SMALLINT PRIMARY KEY CHECK (id = 1),
@@ -152,4 +157,5 @@ CREATE INDEX IF NOT EXISTS candidates_period_id_idx ON candidates(period_id);
 CREATE INDEX IF NOT EXISTS candidates_business_unit_idx ON candidates(business_unit);
 CREATE INDEX IF NOT EXISTS subcriteria_criterion_id_idx ON subcriteria(criterion_id);
 CREATE INDEX IF NOT EXISTS candidate_scores_criterion_id_idx ON candidate_scores(criterion_id);
+CREATE INDEX IF NOT EXISTS candidate_scores_scored_by_user_id_idx ON candidate_scores(scored_by_user_id);
 CREATE INDEX IF NOT EXISTS recruitment_quotas_period_unit_idx ON recruitment_quotas(period_id, business_unit);

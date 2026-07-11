@@ -682,9 +682,13 @@ app.post('/candidates/:id/scores', requireAuth, requireRecruitmentAccess, requir
     for (const criterion of criteria) {
       const rawScore = Number(req.body.scores?.[criterion.id] ?? 3);
       const score = Math.max(1, Math.min(5, rawScore));
-      await client.query(`INSERT INTO candidate_scores (candidate_id,criterion_id,score) VALUES ($1,$2,$3)
-        ON CONFLICT(candidate_id,criterion_id) DO UPDATE SET score=EXCLUDED.score`,
-      [candidateId, criterion.id, score]);
+      await client.query(`INSERT INTO candidate_scores (candidate_id,criterion_id,score,scored_by_user_id,scored_at)
+        VALUES ($1,$2,$3,$4,CURRENT_TIMESTAMP)
+        ON CONFLICT(candidate_id,criterion_id)
+        DO UPDATE SET score=EXCLUDED.score,
+          scored_by_user_id=EXCLUDED.scored_by_user_id,
+          scored_at=CURRENT_TIMESTAMP`,
+      [candidateId, criterion.id, score, req.session.user.id]);
     }
     await client.query('COMMIT');
   } catch (error) {
@@ -809,9 +813,13 @@ app.post('/scores', requireAuth, requireRecruitmentAccess, requireCsrf, async (r
         const { rows: [candidate] } = await client.query('SELECT business_unit,document_status FROM candidates WHERE id=$1', [Number(candidateId)]);
         if (!candidate || candidate.document_status === 'failed') continue;
         if (req.session.user.role === 'recruiter' && candidate.business_unit !== req.session.user.business_unit) continue;
-        await client.query(`INSERT INTO candidate_scores (candidate_id,criterion_id,score) VALUES ($1,$2,$3)
-          ON CONFLICT(candidate_id,criterion_id) DO UPDATE SET score=EXCLUDED.score`,
-        [Number(candidateId), Number(criterionId), score]);
+        await client.query(`INSERT INTO candidate_scores (candidate_id,criterion_id,score,scored_by_user_id,scored_at)
+          VALUES ($1,$2,$3,$4,CURRENT_TIMESTAMP)
+          ON CONFLICT(candidate_id,criterion_id)
+          DO UPDATE SET score=EXCLUDED.score,
+            scored_by_user_id=EXCLUDED.scored_by_user_id,
+            scored_at=CURRENT_TIMESTAMP`,
+        [Number(candidateId), Number(criterionId), score, req.session.user.id]);
       }
     }
     await client.query('COMMIT');
@@ -850,17 +858,30 @@ app.get('/ranking', requireAuth, async (req, res) => {
   const [{ rows: candidates }, { rows: criteria }, { rows: scoreRows }, { rows: [swaraState] }, { rows: [quotaRow] }] = await Promise.all([
     pool.query("SELECT * FROM candidates WHERE period_id=$1 AND business_unit=$2 AND document_status<>'failed' ORDER BY name", [periodId, businessUnit]),
     pool.query("SELECT * FROM criteria ORDER BY CAST(SUBSTRING(code FROM 2) AS INTEGER)"),
-    pool.query(`SELECT cs.* FROM candidate_scores cs JOIN candidates c ON c.id=cs.candidate_id
-      WHERE c.period_id=$1 AND c.business_unit=$2 AND c.document_status<>'failed'`, [periodId, businessUnit]),
+    pool.query(`SELECT cs.*,u.name AS scorer_name,u.username AS scorer_username
+      FROM candidate_scores cs JOIN candidates c ON c.id=cs.candidate_id
+      LEFT JOIN users u ON u.id=cs.scored_by_user_id
+      WHERE c.period_id=$1 AND c.business_unit=$2 AND c.document_status<>'failed'
+      ORDER BY cs.candidate_id, cs.scored_at NULLS FIRST`, [periodId, businessUnit]),
     pool.query('SELECT * FROM swara_process_state WHERE id=1'),
     pool.query('SELECT * FROM recruitment_quotas WHERE period_id=$1 AND business_unit=$2', [periodId, businessUnit]),
   ]);
   const scores = {};
-  for (const row of scoreRows) (scores[row.candidate_id] ??= {})[row.criterion_id] = row.score;
+  const scorers = {};
+  for (const row of scoreRows) {
+    (scores[row.candidate_id] ??= {})[row.criterion_id] = row.score;
+    if (row.scorer_name) {
+      scorers[row.candidate_id] = {
+        name: row.scorer_name,
+        username: row.scorer_username,
+        scoredAt: row.scored_at,
+      };
+    }
+  }
   const swaraReady = Boolean(swaraState?.weights_ready);
   const result = swaraReady ? calculateMabac(candidates, criteria, scores) : { rows: [], details: {} };
   const quota = Number(quotaRow?.quota || 0);
-  res.render('ranking', { title: 'Rangking Penilaian', page: 'ranking', periods, periodId, businessUnit, criteria, result, swaraReady, quota });
+  res.render('ranking', { title: 'Rangking Penilaian', page: 'ranking', periods, periodId, businessUnit, criteria, result, swaraReady, quota, scorers });
 });
 
 app.use((req, res) => res.status(404).send('Halaman tidak ditemukan.'));
