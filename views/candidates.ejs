@@ -2,14 +2,13 @@
 <div class="page-head">
   <div>
     <h1>Data Kandidat</h1>
-    <p>Import data pendaftar dari spreadsheet Google Form, lalu lengkapi penilaian untuk proses MABAC.</p>
   </div>
 </div>
 
 <% if (user.role === 'super_admin') { %>
   <div class="card import-card">
-    <h2>Import Excel Google Form</h2>
-    <p class="muted">Gunakan file hasil unduhan Google Form. Sistem membaca data pendaftar, berkas wajib, serta link video interview dan presentasi jika tersedia.</p>
+    <h2>Import Excel</h2>
+    <p class="muted">Upload Dokumen Spreadsheet Hasil Form Responses Google Form Pendaftaran PKL/Magang</p>
     <form method="post" action="/candidates/import" enctype="multipart/form-data" class="form-grid">
       <input type="hidden" name="csrf" value="<%= csrf %>">
       <input type="hidden" name="period_id" value="<%= importPeriodId %>">
@@ -80,7 +79,6 @@
       </div>
     </div>
   </form>
-  <p class="muted table-count">Menampilkan <strong><%= candidates.length %></strong> kandidat unik sesuai filter.</p>
   <div class="table-wrap">
     <table>
       <thead>
