@@ -11,7 +11,7 @@
   <input type="hidden" name="csrf" value="<%= csrf %>">
   <div class="card table-wrap" style="margin-top:18px">
     <table><thead><tr><th>No.</th><th>Kode</th><th>Kriteria</th><th>Jenis</th><th>Bobot Final SWARA</th></tr></thead><tbody>
-      <% criteria.forEach((criterion,index) => { %><tr><td><%= index + 1 %></td><td><strong><%= criterion.code %></strong></td><td class="criteria-name"><%= criterion.name %></td><td><span class="badge <%= criterion.type === 'cost' ? 'cost' : '' %>"><%= criterion.type.toUpperCase() %></span></td><td><input class="weight-input" data-weight type="text" inputmode="decimal" pattern="0([.,][0-9]+)?|1([.,]0+)?" name="weights[<%= criterion.id %>]" value="<%= number(criterion.weight,6) %>" required></td></tr><% }) %>
+      <% criteria.forEach((criterion,index) => { %><tr><td><%= index + 1 %></td><td><strong><%= criterion.code %></strong></td><td class="criteria-name"><%= criterion.name %></td><td><span class="badge <%= criterion.type === 'cost' ? 'cost' : '' %>"><%= criterion.type.toUpperCase() %></span></td><td><input class="weight-input" data-weight type="text" inputmode="decimal" name="weights[<%= criterion.id %>]" value="<%= number(criterion.weight,6) %>" required></td></tr><% }) %>
     </tbody><tfoot><tr><td colspan="4"><strong>Total Bobot</strong></td><td><strong id="weight-table-total"><%= number(totalWeight,6) %></strong></td></tr></tfoot></table>
   </div>
   <div class="actions"><button class="btn" id="save-weights">Simpan Bobot Final</button><span class="muted">Total bobot boleh selisih kecil karena pembulatan desimal.</span></div>
@@ -24,9 +24,9 @@
   const status = document.getElementById('weight-status');
   const button = document.getElementById('save-weights');
   function parseWeight(value) {
-    const normalized = String(value).trim().replace(',', '.');
-    if (!normalized) return NaN;
-    return Number(normalized);
+    const matches = String(value).trim().replace(/,/g, '.').match(/\d+(?:\.\d+)?/g);
+    if (!matches?.length) return NaN;
+    return Number(matches.at(-1));
   }
   function updateWeightTotal() {
     const values = weightInputs.map((input) => parseWeight(input.value));

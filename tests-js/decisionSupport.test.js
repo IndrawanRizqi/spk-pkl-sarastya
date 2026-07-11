@@ -6,6 +6,8 @@ test('bobot final SWARA harus lengkap dan berjumlah 1', () => {
   assert.equal(validateWeights([0.4, 0.35, 0.25], 3).valid, true);
   assert.equal(validateWeights([0.169749, 0.048199, 0.782051], 3).valid, true);
   assert.equal(validateWeights(['0,4', '0,35', '0,25'], 3).valid, true);
+  assert.equal(validateWeights([' 0,4 ', ['0,35'], '0.25'], 3).valid, true);
+  assert.equal(validateWeights(['K2 0.4', 'K6 0,35', 'K18 0.25'], 3).valid, true);
   assert.equal(validateWeights([0.4, 0.35, 0.20], 3).valid, false);
   assert.equal(validateWeights([0.5, 0.5], 3).valid, false);
   assert.deepEqual(validateWeights(['', 0.5, 0.5], 3).invalidIndexes, [0]);

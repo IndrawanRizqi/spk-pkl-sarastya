@@ -4,13 +4,10 @@ export function parseWeight(value) {
   if (Array.isArray(value)) return parseWeight(value[0]);
   if (typeof value === 'number') return value;
   if (typeof value !== 'string') return Number.NaN;
-  const normalized = value
-    .trim()
-    .replace(/\s/g, '')
-    .replace(',', '.')
-    .replace(/[^0-9.]/g, '');
-  if (!normalized) return Number.NaN;
-  return Number(normalized);
+  const normalized = value.trim().replace(/,/g, '.');
+  const matches = normalized.match(/\d+(?:\.\d+)?/g);
+  if (!matches?.length) return Number.NaN;
+  return Number(matches.at(-1));
 }
 
 export function validateWeights(values, expectedCount, tolerance = WEIGHT_TOTAL_TOLERANCE) {
