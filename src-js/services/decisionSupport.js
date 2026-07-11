@@ -1,20 +1,27 @@
 export const WEIGHT_TOTAL_TOLERANCE = 0.00001;
 
 export function parseWeight(value) {
+  if (Array.isArray(value)) return parseWeight(value[0]);
   if (typeof value === 'number') return value;
   if (typeof value !== 'string') return Number.NaN;
-  const normalized = value.trim().replace(',', '.');
+  const normalized = value
+    .trim()
+    .replace(/\s/g, '')
+    .replace(',', '.')
+    .replace(/[^0-9.]/g, '');
   if (!normalized) return Number.NaN;
   return Number(normalized);
 }
 
 export function validateWeights(values, expectedCount, tolerance = WEIGHT_TOTAL_TOLERANCE) {
   const weights = values.map(parseWeight);
-  const total = weights.reduce((sum, value) => sum + value, 0);
   const invalidIndexes = weights
     .map((value, index) => ({ value, index }))
     .filter(({ value }) => !Number.isFinite(value) || value < 0 || value > 1)
     .map(({ index }) => index);
+  const total = invalidIndexes.length
+    ? Number.NaN
+    : weights.reduce((sum, value) => sum + value, 0);
 
   return {
     valid: weights.length === expectedCount

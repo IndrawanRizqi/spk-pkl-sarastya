@@ -716,7 +716,11 @@ app.post('/swara/weights', requireAuth, superAdminOnly, requireCsrf, async (req,
   const { rows: criteria } = await pool.query(
     "SELECT * FROM criteria ORDER BY CAST(SUBSTRING(code FROM 2) AS INTEGER)",
   );
-  const values = criteria.map((criterion) => req.body.weights?.[criterion.id]);
+  const values = criteria.map((criterion) => (
+    req.body.weights?.[criterion.id]
+    ?? req.body.weights?.[String(criterion.id)]
+    ?? req.body[`weights[${criterion.id}]`]
+  ));
   const validation = validateWeights(values, criteria.length);
   if (!validation.valid) {
     const invalidCriteria = validation.invalidIndexes
