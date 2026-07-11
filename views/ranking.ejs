@@ -1,8 +1,8 @@
 <%- include('partials/header') %>
 <div class="page-head">
   <div>
-    <h1>Hasil Perangkingan MABAC</h1>
-    <p>Perangkingan dihitung terpisah berdasarkan periode dan unit bisnis.</p>
+    <h1>Rangking Penilaian</h1>
+    <p>Rangking Penilaian Kandidat Menggunakan Metode MABAC</p>
   </div>
 </div>
 
@@ -36,6 +36,28 @@
   </form>
 </div>
 
+<div class="card quota-card no-print">
+  <h2>Kuota Penerimaan</h2>
+  <form method="post" action="/ranking/quota" class="filter-grid">
+    <input type="hidden" name="csrf" value="<%= csrf %>">
+    <input type="hidden" name="period_id" value="<%= periodId %>">
+    <input type="hidden" name="business_unit" value="<%= businessUnit %>">
+    <div class="field">
+      <label>Unit bisnis</label>
+      <input value="<%= businessUnit %>" disabled>
+    </div>
+    <div class="field">
+      <label>Kuota kandidat diterima</label>
+      <input type="number" name="quota" min="0" value="<%= quota %>" required>
+    </div>
+    <div class="field form-action">
+      <label>&nbsp;</label>
+      <button class="btn">Simpan Kuota</button>
+    </div>
+  </form>
+  <p class="muted">Kandidat dengan peringkat MABAC sampai batas kuota akan diberi rekomendasi diterima. Keputusan final tetap ditentukan melalui tombol Terima atau Tolak.</p>
+</div>
+
 <% if (!swaraReady) { %>
   <div class="notice error">Perhitungan MABAC belum dapat dijalankan. Masukkan dan simpan bobot final SWARA pada menu Bobot Kriteria terlebih dahulu.</div>
 <% } else if (!result.rows.length) { %>
@@ -52,6 +74,7 @@
             <th>Instansi</th>
             <th>Peminatan</th>
             <th>Nilai Si</th>
+            <th>Rekomendasi Sistem</th>
             <th>Status</th>
             <% if (user.role === 'recruiter') { %><th class="no-print">Keputusan</th><% } %>
           </tr>
@@ -64,6 +87,15 @@
               <td><%= row.candidate.institution %></td>
               <td><%= row.candidate.interest %></td>
               <td><strong><%= number(row.value,6) %></strong></td>
+              <td>
+                <% if (!quota) { %>
+                  <span class="badge status-pending">Kuota belum diatur</span>
+                <% } else if (row.rank <= quota) { %>
+                  <span class="badge status-accepted">Direkomendasikan Diterima</span>
+                <% } else { %>
+                  <span class="badge status-rejected">Tidak Masuk Kuota</span>
+                <% } %>
+              </td>
               <td><span class="badge status-<%= row.candidate.selection_status %>"><%= row.candidate.selection_status === 'accepted' ? 'Diterima' : row.candidate.selection_status === 'rejected' ? 'Ditolak' : 'Menunggu' %></span></td>
               <% if (user.role === 'recruiter') { %>
                 <td class="no-print">
