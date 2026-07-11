@@ -31,7 +31,7 @@
     </div>
     <div class="field form-action">
       <label>&nbsp;</label>
-      <button class="btn secondary" type="button" onclick="window.print()">Cetak Hasil</button>
+      <button class="btn secondary" type="button" onclick="printRankingResult()">Cetak Hasil</button>
     </div>
   </form>
 </div>
@@ -137,4 +137,14 @@
     </div>
   </details>
 <% } %>
+<script>
+  function printRankingResult() {
+    const originalTitle = document.title;
+    document.title = ' ';
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 500);
+  }
+</script>
 <%- include('partials/footer') %>
