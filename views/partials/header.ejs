@@ -9,7 +9,7 @@
 <body>
 <div class="shell">
   <aside class="sidebar">
-    <div class="sidebar-brand"><img class="brand-logo" src="/sarastya-logo.png" alt="Logo Sarastya Agility Innovations"><div><strong>Sistem Pendukung Keputusan</strong><span>Rekrutmen PKL/Magang<br>Sarastya Agility Innovations</span></div></div>
+    <div class="sidebar-brand"><img class="brand-logo" src="/sarastya-logo.png" alt="Logo Sarastya Agility Innovations"><div><strong>Sarastya Agility Innovations</strong><span>Sistem Pendukung Keputusan Rekrutmen PKL/Magang</span></div></div>
     <div class="nav-label">MENU UTAMA</div>
     <% const links = [['dashboard','Dashboard Rekrutmen'],['periods','Periode Seleksi'],['users','Kelola Akun Tim Rekrutmen'],['candidates','Data Kandidat'],['criteria','Kriteria'],['swara','Bobot Kriteria'],['ranking','Rangking Penilaian']]; %>
     <% for (const [route,label] of links) { %>
@@ -17,9 +17,28 @@
         <a class="nav-link <%= page === route ? 'active' : '' %>" href="/<%= route %>"><%= label %></a>
       <% } %>
     <% } %>
-    <div class="nav-label">AKUN</div><a class="nav-link" href="/logout">Keluar</a>
   </aside>
   <main class="main">
-    <header class="topbar"><strong><%= title %></strong><div class="user-chip"><strong><%= user.role === 'super_admin' ? 'HG Sarastya' : `Tim Rekrutmen (Unit Bisnis) - ${user.business_unit}` %></strong></div></header>
+    <% const profileLabel = user.role === 'super_admin' ? 'HG Sarastya' : `Tim Rekrutmen (Unit Bisnis) - ${user.business_unit}`; %>
+    <header class="topbar">
+      <strong><%= title %></strong>
+      <details class="profile-menu">
+        <summary>
+          <span class="profile-avatar"><%= user.role === 'super_admin' ? 'HG' : 'TR' %></span>
+          <span class="profile-summary-text">
+            <strong><%= profileLabel %></strong>
+            <small><%= user.username %></small>
+          </span>
+        </summary>
+        <div class="profile-dropdown">
+          <div class="profile-info">
+            <span>Profil Pengguna</span>
+            <strong><%= profileLabel %></strong>
+            <small><%= user.role === 'super_admin' ? 'Super Admin' : user.business_unit %></small>
+          </div>
+          <a class="btn secondary profile-logout" href="/logout">Keluar</a>
+        </div>
+      </details>
+    </header>
     <section class="content">
       <% if (flash) { %><div class="notice <%= flash.type === 'error' ? 'error' : '' %>"><%= flash.message %></div><% } %>

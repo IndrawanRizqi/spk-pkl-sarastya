@@ -4,7 +4,7 @@
 
 <div class="grid two-col weight-overview">
   <div class="stat"><span>Total Bobot</span><strong id="weight-total"><%= number(totalWeight,6) %></strong></div>
-  <div class="stat"><span>Status MABAC</span><strong id="weight-status" class="<%= state.weights_ready ? 'status-valid' : '' %>"><%= state.weights_ready ? 'Siap' : 'Belum siap' %></strong></div>
+  <div class="stat"><span>Status Bobot</span><strong id="weight-status" class="<%= state.weights_ready ? 'status-valid' : '' %>"><%= state.weights_ready ? 'Siap' : 'Belum siap' %></strong></div>
 </div>
 
 <form method="post" action="/swara/weights" id="weights-form">
