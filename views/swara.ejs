@@ -13,7 +13,7 @@
     <h2>Paste Bobot SWARA</h2>
     <p class="muted">Tempel daftar bobot seperti <strong>K1 = 0.169749</strong> sampai <strong>K20 = 0.017851</strong>, lalu klik Terapkan Bobot.</p>
     <textarea id="bulk-weights" name="bulkWeights" rows="6" placeholder="K1 = 0.169749&#10;K2 = 0.048199&#10;K3 = 0.058321"></textarea>
-    <div class="actions"><button class="btn secondary" type="button" id="apply-bulk-weights">Terapkan Bobot</button></div>
+    <div class="actions"><button class="btn secondary" type="button" id="apply-bulk-weights">Terapkan Bobot</button><button class="btn secondary" type="button" id="apply-recommended-weights">Isi Bobot Rekomendasi</button></div>
   </div>
   <div class="card table-wrap" style="margin-top:18px">
     <table><thead><tr><th>No.</th><th>Kode</th><th>Kriteria</th><th>Jenis</th><th>Bobot Final SWARA</th></tr></thead><tbody>
@@ -31,6 +31,29 @@
   const button = document.getElementById('save-weights');
   const bulkWeights = document.getElementById('bulk-weights');
   const applyBulkWeights = document.getElementById('apply-bulk-weights');
+  const applyRecommendedWeights = document.getElementById('apply-recommended-weights');
+  const recommendedWeights = {
+    K1: '0.169749',
+    K2: '0.048199',
+    K3: '0.058321',
+    K4: '0.107777',
+    K5: '0.053019',
+    K6: '0.026777',
+    K7: '0.004238',
+    K8: '0.048199',
+    K9: '0.048199',
+    K10: '0.012397',
+    K11: '0.069985',
+    K12: '0.161665',
+    K13: '0.097979',
+    K14: '0.002825',
+    K15: '0.001885',
+    K16: '0.006357',
+    K17: '0.040166',
+    K18: '0.014876',
+    K19: '0.009536',
+    K20: '0.017851',
+  };
   function parseWeight(value) {
     const matches = String(value).trim().replace(/,/g, '.').match(/\d+(?:\.\d+)?/g);
     if (!matches?.length) return NaN;
@@ -52,6 +75,14 @@
     });
     updateWeightTotal();
   }
+  function applyRecommendedWeightValues() {
+    weightInputs.forEach((input) => {
+      const value = recommendedWeights[input.dataset.code];
+      if (value) input.value = value;
+    });
+    bulkWeights.value = Object.entries(recommendedWeights).map(([code, value]) => `${code} = ${value}`).join('\n');
+    updateWeightTotal();
+  }
   function updateWeightTotal() {
     const values = weightInputs.map((input) => parseWeight(input.value));
     const invalid = values.some((value) => !Number.isFinite(value) || value < 0 || value > 1);
@@ -64,6 +95,7 @@
     button.disabled = !valid;
   }
   applyBulkWeights.addEventListener('click', applyBulkWeightValues);
+  applyRecommendedWeights.addEventListener('click', applyRecommendedWeightValues);
   weightInputs.forEach((input) => input.addEventListener('input', updateWeightTotal));
   updateWeightTotal();
 </script>
