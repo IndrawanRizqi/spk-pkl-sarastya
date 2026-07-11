@@ -849,7 +849,7 @@ app.get('/ranking', requireAuth, async (req, res) => {
   const businessUnit = scopedBusinessUnit(req, req.query.business_unit);
   const [{ rows: candidates }, { rows: criteria }, { rows: scoreRows }, { rows: [swaraState] }, { rows: [quotaRow] }] = await Promise.all([
     pool.query("SELECT * FROM candidates WHERE period_id=$1 AND business_unit=$2 AND document_status<>'failed' ORDER BY name", [periodId, businessUnit]),
-    pool.query('SELECT * FROM criteria ORDER BY priority_order'),
+    pool.query("SELECT * FROM criteria ORDER BY CAST(SUBSTRING(code FROM 2) AS INTEGER)"),
     pool.query(`SELECT cs.* FROM candidate_scores cs JOIN candidates c ON c.id=cs.candidate_id
       WHERE c.period_id=$1 AND c.business_unit=$2 AND c.document_status<>'failed'`, [periodId, businessUnit]),
     pool.query('SELECT * FROM swara_process_state WHERE id=1'),
@@ -857,7 +857,7 @@ app.get('/ranking', requireAuth, async (req, res) => {
   ]);
   const scores = {};
   for (const row of scoreRows) (scores[row.candidate_id] ??= {})[row.criterion_id] = row.score;
-  const swaraReady = swaraState.weights_ready;
+  const swaraReady = Boolean(swaraState?.weights_ready);
   const result = swaraReady ? calculateMabac(candidates, criteria, scores) : { rows: [], details: {} };
   const quota = Number(quotaRow?.quota || 0);
   res.render('ranking', { title: 'Rangking Penilaian', page: 'ranking', periods, periodId, businessUnit, criteria, result, swaraReady, quota });
