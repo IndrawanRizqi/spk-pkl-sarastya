@@ -46,4 +46,8 @@
       </details>
     </header>
     <section class="content">
-      <% if (flash) { %><div class="notice <%= flash.type === 'error' ? 'error' : '' %>"><%= flash.message %></div><% } %>
+      <% if (flash) { %>
+        <div class="toast <%= flash.type === 'error' ? 'error' : '' %>" role="status" aria-live="polite">
+          <%= flash.message %>
+        </div>
+      <% } %>
