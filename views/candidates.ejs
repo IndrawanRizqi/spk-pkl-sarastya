@@ -2,13 +2,14 @@
 <div class="page-head">
   <div>
     <h1>Data Kandidat</h1>
+    <p>Import data pendaftar dari spreadsheet Google Form, lalu lengkapi penilaian untuk proses MABAC.</p>
   </div>
 </div>
 
 <% if (user.role === 'super_admin') { %>
   <div class="card import-card">
     <h2>Import Excel Google Form</h2>
-    <p class="muted">Input File Spreadsheet/Excel Responses Google Form Pendaftaran PKL/Magang</p>
+    <p class="muted">Gunakan file hasil unduhan Google Form. Sistem membaca data pendaftar, berkas wajib, serta link video interview dan presentasi jika tersedia.</p>
     <form method="post" action="/candidates/import" enctype="multipart/form-data" class="form-grid">
       <input type="hidden" name="csrf" value="<%= csrf %>">
       <input type="hidden" name="period_id" value="<%= importPeriodId %>">
@@ -91,6 +92,7 @@
           <th>Peminatan</th>
           <th>Unit Bisnis</th>
           <th>Periode</th>
+          <th>Berkas</th>
           <th>Video</th>
           <th>Penilaian</th>
           <th>Status</th>
@@ -100,7 +102,7 @@
       <tbody>
         <% if (!candidates.length) { %>
           <tr class="empty-table-row">
-            <td colspan="11">Data Tidak Ditemukan</td>
+            <td colspan="12">Data Tidak Ditemukan</td>
           </tr>
         <% } %>
         <% for (const candidate of candidates) { %>
@@ -118,6 +120,34 @@
             <td><%= candidate.interest %></td>
             <td><span class="badge unit"><%= candidate.business_unit %></span></td>
             <td><%= candidate.period_name %> <%= candidate.year %></td>
+            <td>
+              <div class="file-links">
+                <% if (candidate.cv_file) { %>
+                  <% if (/^https?:\/\//i.test(candidate.cv_file)) { %>
+                    <a class="btn secondary small" href="<%= candidate.cv_file %>" target="_blank" rel="noopener noreferrer">CV</a>
+                  <% } else { %>
+                    <span class="badge status-accepted">CV</span>
+                  <% } %>
+                <% } %>
+                <% if (candidate.transcript_file) { %>
+                  <% if (/^https?:\/\//i.test(candidate.transcript_file)) { %>
+                    <a class="btn secondary small" href="<%= candidate.transcript_file %>" target="_blank" rel="noopener noreferrer">Transkrip</a>
+                  <% } else { %>
+                    <span class="badge status-accepted">Transkrip</span>
+                  <% } %>
+                <% } %>
+                <% if (candidate.photo_file) { %>
+                  <% if (/^https?:\/\//i.test(candidate.photo_file)) { %>
+                    <a class="btn secondary small" href="<%= candidate.photo_file %>" target="_blank" rel="noopener noreferrer">Foto 4x6</a>
+                  <% } else { %>
+                    <span class="badge status-accepted">Foto 4x6</span>
+                  <% } %>
+                <% } %>
+                <% if (!candidate.cv_file && !candidate.transcript_file && !candidate.photo_file) { %>
+                  <span class="muted">-</span>
+                <% } %>
+              </div>
+            </td>
             <td>
               <div class="video-links">
                 <% if (candidate.interview_video_url) { %>

@@ -116,7 +116,7 @@ input:focus, select:focus { outline: 3px solid rgba(146,58,159,.14); border-colo
 .candidate-link:hover strong { color: var(--brand); }
 .candidate-link.disabled strong { color: var(--muted); }
 .candidate-link.disabled span { color: var(--danger); line-height: 1.35; }
-.video-links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.video-links, .file-links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .table-count { margin: 4px 0 16px; font-size: 13px; }
 .empty-table-row td { background: #fff0ee; color: var(--danger); font-weight: 800; text-align: center; padding: 18px; }
 
