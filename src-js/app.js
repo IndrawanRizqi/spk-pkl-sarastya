@@ -229,6 +229,15 @@ app.post('/users/:id/status', requireAuth, superAdminOnly, requireCsrf, async (r
   res.redirect('/users');
 });
 
+app.post('/users/:id/delete', requireAuth, superAdminOnly, requireCsrf, async (req, res) => {
+  const { rowCount } = await pool.query(
+    "DELETE FROM users WHERE id=$1 AND role='recruiter'",
+    [Number(req.params.id)],
+  );
+  flash(req, rowCount ? 'Akun Tim Rekrutmen berhasil dihapus.' : 'Akun Tim Rekrutmen tidak ditemukan.', rowCount ? 'success' : 'error');
+  res.redirect('/users');
+});
+
 app.get('/dashboard', requireAuth, async (req, res) => {
   const { rows: periods } = await pool.query('SELECT * FROM periods ORDER BY year DESC,id DESC');
   const requestedPeriodId = Number(req.query.period_id || 0);
