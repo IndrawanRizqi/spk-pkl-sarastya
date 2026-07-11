@@ -40,11 +40,22 @@
           </div>
           <div class="profile-actions">
             <a class="btn secondary" href="/profile">Edit Profil</a>
-            <a class="btn secondary profile-logout" href="/logout" onclick="return confirm('Apakah Anda akan logout dari sistem?')">Keluar</a>
+            <button class="btn secondary profile-logout" type="button" data-open-logout>Keluar</button>
           </div>
         </div>
       </details>
     </header>
+    <div class="modal-backdrop" id="logout-modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="logout-title">
+        <div class="modal-icon">!</div>
+        <h2 id="logout-title">Keluar dari Sistem?</h2>
+        <p>Apakah Anda yakin ingin mengakhiri sesi dan keluar dari sistem?</p>
+        <div class="modal-actions">
+          <button class="btn secondary" type="button" data-close-logout>Batal</button>
+          <a class="btn danger" href="/logout">Keluar</a>
+        </div>
+      </div>
+    </div>
     <section class="content">
       <% if (flash) { %>
         <div class="toast <%= flash.type === 'error' ? 'error' : '' %>" role="status" aria-live="polite">
