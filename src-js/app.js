@@ -165,6 +165,50 @@ app.post('/login', requireCsrf, async (req, res) => {
   req.session.user = safeAccount;
   res.redirect('/dashboard');
 });
+app.get('/profile', requireAuth, (req, res) => {
+  res.render('profile', { title: 'Edit Profil', page: 'profile' });
+});
+
+app.post('/profile', requireAuth, requireCsrf, async (req, res) => {
+  const name = String(req.body.name || '').trim();
+  const username = String(req.body.username || '').trim().toLowerCase();
+  const password = String(req.body.password || '');
+  const confirmation = String(req.body.password_confirmation || '');
+
+  if (name.length < 3 || username.length < 4) {
+    flash(req, 'Nama minimal 3 karakter dan username minimal 4 karakter.', 'error');
+    return res.redirect('/profile');
+  }
+  if (password && (password.length < 8 || password !== confirmation)) {
+    flash(req, 'Password baru minimal 8 karakter dan konfirmasi harus sama.', 'error');
+    return res.redirect('/profile');
+  }
+
+  try {
+    const params = [name, username, req.session.user.id];
+    const passwordSql = password ? ', password=$4' : '';
+    if (password) params.push(hashPassword(password));
+
+    const { rows: [account] } = await pool.query(
+      `UPDATE users
+       SET name=$1, username=$2${passwordSql}
+       WHERE id=$3
+       RETURNING id,username,name,role,business_unit,account_status,created_at`,
+      params,
+    );
+
+    req.session.user = account;
+    flash(req, 'Profil berhasil diperbarui.');
+    res.redirect('/profile');
+  } catch (error) {
+    if (error.code === '23505') {
+      flash(req, 'Username sudah digunakan.', 'error');
+      return res.redirect('/profile');
+    }
+    throw error;
+  }
+});
+
 app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login')));
 
 app.get('/users', requireAuth, superAdminOnly, async (req, res) => {

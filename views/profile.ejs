@@ -1,0 +1,42 @@
+<%- include('partials/header') %>
+<div class="page-head">
+  <div>
+    <h1>Edit Profil</h1>
+  </div>
+</div>
+
+<div class="card profile-card">
+  <h2>Manajemen Profil</h2>
+  <form method="post" action="/profile" class="form-grid">
+    <input type="hidden" name="csrf" value="<%= csrf %>">
+    <div class="field">
+      <label>Nama</label>
+      <input name="name" value="<%= user.name %>" minlength="3" required>
+    </div>
+    <div class="field">
+      <label>Username</label>
+      <input name="username" value="<%= user.username %>" minlength="4" required>
+    </div>
+    <div class="field">
+      <label>Role</label>
+      <input value="<%= user.role === 'super_admin' ? 'Super Admin' : 'Tim Rekrutmen' %>" disabled>
+    </div>
+    <div class="field">
+      <label>Unit Bisnis</label>
+      <input value="<%= user.role === 'super_admin' ? '-' : user.business_unit %>" disabled>
+    </div>
+    <div class="field">
+      <label>Password Baru</label>
+      <input type="password" name="password" minlength="8" placeholder="Kosongkan jika tidak diganti">
+    </div>
+    <div class="field">
+      <label>Konfirmasi Password Baru</label>
+      <input type="password" name="password_confirmation" minlength="8" placeholder="Ulangi password baru">
+    </div>
+    <div class="actions field full">
+      <button class="btn">Simpan Profil</button>
+      <a class="btn secondary" href="/dashboard">Batal</a>
+    </div>
+  </form>
+</div>
+<%- include('partials/footer') %>

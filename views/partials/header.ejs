@@ -19,7 +19,7 @@
     <% } %>
   </aside>
   <main class="main">
-    <% const profileLabel = user.role === 'super_admin' ? 'HG Sarastya' : `Tim Rekrutmen (Unit Bisnis) - ${user.business_unit}`; %>
+    <% const profileLabel = user.role === 'super_admin' ? 'HG Sarastya' : `Tim Rekrutmen - ${user.business_unit}`; %>
     <header class="topbar">
       <strong><%= title %></strong>
       <details class="profile-menu">
@@ -36,7 +36,10 @@
             <strong><%= profileLabel %></strong>
             <small><%= user.role === 'super_admin' ? 'Super Admin' : user.business_unit %></small>
           </div>
-          <a class="btn secondary profile-logout" href="/logout">Keluar</a>
+          <div class="profile-actions">
+            <a class="btn secondary" href="/profile">Edit Profil</a>
+            <a class="btn secondary profile-logout" href="/logout" onclick="return confirm('Apakah Anda akan logout dari sistem?')">Keluar</a>
+          </div>
         </div>
       </details>
     </header>
