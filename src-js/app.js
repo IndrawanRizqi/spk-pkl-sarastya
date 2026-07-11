@@ -10,7 +10,12 @@ import { fileURLToPath } from 'node:url';
 import { hashPassword, initializeDatabase, pool, verifyPassword } from './database.js';
 import { BUSINESS_UNITS, parseCandidateSpreadsheet } from './services/candidateImport.js';
 import { criteriaDetails } from './services/criteriaDetails.js';
-import { calculateMabac, parseWeight, validateWeights } from './services/decisionSupport.js';
+import {
+  calculateMabac,
+  parseWeight,
+  RECOMMENDED_SWARA_WEIGHTS,
+  validateWeights,
+} from './services/decisionSupport.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const importDir = process.env.VERCEL
@@ -726,7 +731,14 @@ app.get('/swara', requireAuth, superAdminOnly, async (req, res) => {
     pool.query('SELECT * FROM swara_process_state WHERE id=1'),
   ]);
   const totalWeight = criteria.reduce((sum, criterion) => sum + Number(criterion.weight), 0);
-  res.render('swara', { title: 'Bobot Kriteria', page: 'swara', criteria, state, totalWeight });
+  res.render('swara', {
+    title: 'Bobot Kriteria',
+    page: 'swara',
+    criteria,
+    state,
+    totalWeight,
+    recommendedWeights: RECOMMENDED_SWARA_WEIGHTS,
+  });
 });
 
 app.post('/swara/weights', requireAuth, superAdminOnly, requireCsrf, async (req, res) => {
@@ -734,13 +746,15 @@ app.post('/swara/weights', requireAuth, superAdminOnly, requireCsrf, async (req,
     "SELECT * FROM criteria ORDER BY CAST(SUBSTRING(code FROM 2) AS INTEGER)",
   );
   const bulkWeights = parseBulkWeights(req.body.bulkWeights);
-  const values = criteria.map((criterion) => firstValidWeight(
-    req.body.weights?.[criterion.id],
-    req.body.weights?.[String(criterion.id)],
-    req.body[`weights[${criterion.id}]`],
-    bulkWeights[criterion.code],
-    bulkWeights[criterion.code?.replace(/^C/, 'K')],
-  ));
+  const values = req.body.useRecommendedWeights === '1'
+    ? criteria.map((criterion) => RECOMMENDED_SWARA_WEIGHTS[criterion.code])
+    : criteria.map((criterion) => firstValidWeight(
+      req.body.weights?.[criterion.id],
+      req.body.weights?.[String(criterion.id)],
+      req.body[`weights[${criterion.id}]`],
+      bulkWeights[criterion.code],
+      bulkWeights[criterion.code?.replace(/^C/, 'K')],
+    ));
   const validation = validateWeights(values, criteria.length);
   if (!validation.valid) {
     const invalidCriteria = validation.invalidIndexes

@@ -1,5 +1,28 @@
 export const WEIGHT_TOTAL_TOLERANCE = 0.00001;
 
+export const RECOMMENDED_SWARA_WEIGHTS = {
+  K1: '0.169749',
+  K2: '0.048199',
+  K3: '0.058321',
+  K4: '0.107777',
+  K5: '0.053019',
+  K6: '0.026777',
+  K7: '0.004238',
+  K8: '0.048199',
+  K9: '0.048199',
+  K10: '0.012397',
+  K11: '0.069985',
+  K12: '0.161665',
+  K13: '0.097979',
+  K14: '0.002825',
+  K15: '0.001885',
+  K16: '0.006357',
+  K17: '0.040166',
+  K18: '0.014876',
+  K19: '0.009536',
+  K20: '0.017851',
+};
+
 export function parseWeight(value) {
   if (Array.isArray(value)) return parseWeight(value[0]);
   if (typeof value === 'number') return value;
