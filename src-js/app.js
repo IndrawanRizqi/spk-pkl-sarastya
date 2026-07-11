@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { hashPassword, initializeDatabase, pool, verifyPassword } from './database.js';
 import { BUSINESS_UNITS, parseCandidateSpreadsheet } from './services/candidateImport.js';
 import { criteriaDetails } from './services/criteriaDetails.js';
-import { calculateMabac, validateWeights } from './services/decisionSupport.js';
+import { calculateMabac, parseWeight, validateWeights } from './services/decisionSupport.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const importDir = process.env.VERCEL
@@ -65,6 +65,23 @@ app.use((req, res, next) => {
 
 function flash(req, message, type = 'success') {
   req.session.flash = { message, type };
+}
+
+function parseBulkWeights(text = '') {
+  const result = {};
+  const pattern = /\b([KC]\d{1,2})\b\s*(?:=|:|-)?\s*([0-9]+(?:[.,][0-9]+)?)/gi;
+  for (const match of String(text).matchAll(pattern)) {
+    const code = match[1].toUpperCase().replace(/^C/, 'K');
+    result[code] = match[2];
+  }
+  return result;
+}
+
+function firstValidWeight(...values) {
+  return values.find((value) => {
+    const parsed = parseWeight(value);
+    return Number.isFinite(parsed) && parsed >= 0 && parsed <= 1;
+  });
 }
 
 function requireCsrf(req, res, next) {
@@ -716,10 +733,13 @@ app.post('/swara/weights', requireAuth, superAdminOnly, requireCsrf, async (req,
   const { rows: criteria } = await pool.query(
     "SELECT * FROM criteria ORDER BY CAST(SUBSTRING(code FROM 2) AS INTEGER)",
   );
-  const values = criteria.map((criterion) => (
-    req.body.weights?.[criterion.id]
-    ?? req.body.weights?.[String(criterion.id)]
-    ?? req.body[`weights[${criterion.id}]`]
+  const bulkWeights = parseBulkWeights(req.body.bulkWeights);
+  const values = criteria.map((criterion) => firstValidWeight(
+    req.body.weights?.[criterion.id],
+    req.body.weights?.[String(criterion.id)],
+    req.body[`weights[${criterion.id}]`],
+    bulkWeights[criterion.code],
+    bulkWeights[criterion.code?.replace(/^C/, 'K')],
   ));
   const validation = validateWeights(values, criteria.length);
   if (!validation.valid) {
