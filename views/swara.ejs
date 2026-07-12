@@ -10,12 +10,6 @@
 <form method="post" action="/swara/weights" id="weights-form">
   <input type="hidden" name="csrf" value="<%= csrf %>">
   <input type="hidden" name="useRecommendedWeights" id="use-recommended-weights" value="0">
-  <div class="card" style="margin-top:18px">
-    <h2>Paste Bobot SWARA</h2>
-    <p class="muted">Tempel daftar bobot seperti <strong>K1 = 0.169749</strong> sampai <strong>K20 = 0.017851</strong>, lalu klik Terapkan Bobot.</p>
-    <textarea id="bulk-weights" name="bulkWeights" rows="6" placeholder="K1 = 0.169749&#10;K2 = 0.048199&#10;K3 = 0.058321"></textarea>
-    <div class="actions"><button class="btn secondary" type="button" id="apply-bulk-weights">Terapkan Bobot</button><button class="btn secondary" type="button" id="apply-recommended-weights">Isi Bobot Rekomendasi</button></div>
-  </div>
   <div class="card table-wrap" style="margin-top:18px">
     <table><thead><tr><th>No.</th><th>Kode</th><th>Kriteria</th><th>Jenis</th><th>Bobot Final SWARA</th></tr></thead><tbody>
       <% criteria.forEach((criterion,index) => { %><tr><td><%= index + 1 %></td><td><strong><%= criterion.code %></strong></td><td class="criteria-name"><%= criterion.name %></td><td><span class="badge <%= criterion.type === 'cost' ? 'cost' : '' %>"><%= criterion.type.toUpperCase() %></span></td><td><input class="weight-input" data-weight data-code="<%= criterion.code %>" type="text" inputmode="decimal" name="weights[<%= criterion.id %>]" value="<%= number(criterion.weight,6) %>" required></td></tr><% }) %>
@@ -30,41 +24,11 @@
   const totalTable = document.getElementById('weight-table-total');
   const status = document.getElementById('weight-status');
   const button = document.getElementById('save-weights');
-  const bulkWeights = document.getElementById('bulk-weights');
-  const applyBulkWeights = document.getElementById('apply-bulk-weights');
-  const applyRecommendedWeights = document.getElementById('apply-recommended-weights');
   const useRecommendedWeights = document.getElementById('use-recommended-weights');
-  const recommendedWeights = <%- JSON.stringify(recommendedWeights) %>;
   function parseWeight(value) {
     const matches = String(value).trim().replace(/,/g, '.').match(/\d+(?:\.\d+)?/g);
     if (!matches?.length) return NaN;
     return Number(matches.at(-1));
-  }
-  function parseBulkWeights(text) {
-    const result = new Map();
-    const pattern = /\b([KC]\d{1,2})\b\s*(?:=|:|-)?\s*([0-9]+(?:[.,][0-9]+)?)/gi;
-    for (const match of String(text).matchAll(pattern)) {
-      result.set(match[1].toUpperCase().replace(/^C/, 'K'), match[2].replace(',', '.'));
-    }
-    return result;
-  }
-  function applyBulkWeightValues() {
-    useRecommendedWeights.value = '0';
-    const parsed = parseBulkWeights(bulkWeights.value);
-    weightInputs.forEach((input) => {
-      const value = parsed.get(input.dataset.code);
-      if (value) input.value = value;
-    });
-    updateWeightTotal();
-  }
-  function applyRecommendedWeightValues() {
-    useRecommendedWeights.value = '1';
-    weightInputs.forEach((input) => {
-      const value = recommendedWeights[input.dataset.code];
-      if (value) input.value = value;
-    });
-    bulkWeights.value = Object.entries(recommendedWeights).map(([code, value]) => `${code} = ${value}`).join('\n');
-    updateWeightTotal();
   }
   function updateWeightTotal() {
     const values = weightInputs.map((input) => parseWeight(input.value));
@@ -77,8 +41,6 @@
     status.classList.toggle('status-valid', valid);
     button.disabled = !valid;
   }
-  applyBulkWeights.addEventListener('click', applyBulkWeightValues);
-  applyRecommendedWeights.addEventListener('click', applyRecommendedWeightValues);
   weightInputs.forEach((input) => input.addEventListener('input', () => {
     useRecommendedWeights.value = '0';
     updateWeightTotal();
