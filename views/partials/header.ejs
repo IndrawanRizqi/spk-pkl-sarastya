@@ -17,6 +17,8 @@
         <a class="nav-link <%= page === route ? 'active' : '' %>" href="/<%= route %>"><%= label %></a>
       <% } %>
     <% } %>
+    <div class="nav-label account-label">AKUN</div>
+    <button class="nav-link nav-logout" type="button" data-open-logout>Keluar</button>
   </aside>
   <main class="main">
     <% const profileName = user.name || (user.role === 'super_admin' ? 'HG Sarastya' : 'Tim Rekrutmen'); %>

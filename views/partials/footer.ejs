@@ -3,14 +3,14 @@
 </div>
 <script>
   const logoutModal = document.getElementById('logout-modal');
-  const openLogout = document.querySelector('[data-open-logout]');
+  const openLogoutButtons = document.querySelectorAll('[data-open-logout]');
   const closeLogout = document.querySelector('[data-close-logout]');
   function setLogoutModal(open) {
     if (!logoutModal) return;
     logoutModal.hidden = !open;
     document.body.classList.toggle('modal-open', open);
   }
-  openLogout?.addEventListener('click', () => setLogoutModal(true));
+  openLogoutButtons.forEach((button) => button.addEventListener('click', () => setLogoutModal(true)));
   closeLogout?.addEventListener('click', () => setLogoutModal(false));
   logoutModal?.addEventListener('click', (event) => {
     if (event.target === logoutModal) setLogoutModal(false);
