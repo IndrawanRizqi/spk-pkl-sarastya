@@ -164,7 +164,7 @@ app.post('/register', requireCsrf, async (req, res) => {
     throw error;
   }
 
-  flash(req, 'Pendaftaran Tim Rekrutmen berhasil. Akun menunggu persetujuan Super Admin SPK.');
+  flash(req, 'Pendaftaran Tim Rekrutmen Berhasil, silahkan tunggu konfirmasi dari HG Sarastya');
   res.redirect('/login');
 });
 app.post('/login', requireCsrf, async (req, res) => {
@@ -243,6 +243,15 @@ app.get('/users', requireAuth, superAdminOnly, async (req, res) => {
 app.post('/users/:id/status', requireAuth, superAdminOnly, requireCsrf, async (req, res) => {
   const status = ['pending', 'active', 'rejected'].includes(req.body.account_status) ? req.body.account_status : 'pending';
   const businessUnit = normalizeBusinessUnitInput(req.body.business_unit);
+  if (status === 'rejected') {
+    const { rowCount } = await pool.query(
+      "DELETE FROM users WHERE id=$1 AND role='recruiter'",
+      [Number(req.params.id)],
+    );
+    flash(req, rowCount ? 'Pendaftaran Tim Rekrutmen berhasil ditolak dan akun dihapus dari daftar.' : 'Akun Tim Rekrutmen tidak ditemukan.', rowCount ? 'success' : 'error');
+    return res.redirect('/users');
+  }
+
   const { rowCount } = await pool.query(
     "UPDATE users SET account_status=$1,business_unit=$2 WHERE id=$3 AND role='recruiter'",
     [status, businessUnit, Number(req.params.id)],
