@@ -234,21 +234,32 @@ app.post('/profile', requireAuth, requireCsrf, async (req, res) => {
 app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login')));
 
 app.get('/users', requireAuth, superAdminOnly, async (req, res) => {
-  const { rows: users } = await pool.query(
-    "SELECT id,username,name,role,business_unit,account_status,created_at FROM users WHERE role='recruiter' ORDER BY account_status DESC,created_at DESC,id DESC",
-  );
+  const { rows: users } = await pool.query(`SELECT u.id,u.username,u.name,u.role,u.business_unit,u.account_status,u.created_at,
+      COUNT(cs.candidate_id)::int AS score_count
+    FROM users u
+    LEFT JOIN candidate_scores cs ON cs.scored_by_user_id=u.id
+    WHERE u.role='recruiter'
+    GROUP BY u.id
+    ORDER BY
+      CASE u.account_status
+        WHEN 'pending' THEN 1
+        WHEN 'active' THEN 2
+        WHEN 'inactive' THEN 3
+        ELSE 4
+      END,
+      u.created_at DESC,u.id DESC`);
   res.render('users', { title: 'Kelola Akun Tim Rekrutmen', page: 'users', users });
 });
 
 app.post('/users/:id/status', requireAuth, superAdminOnly, requireCsrf, async (req, res) => {
-  const status = ['pending', 'active', 'rejected'].includes(req.body.account_status) ? req.body.account_status : 'pending';
+  const status = ['pending', 'active', 'inactive', 'rejected'].includes(req.body.account_status) ? req.body.account_status : 'pending';
   const businessUnit = normalizeBusinessUnitInput(req.body.business_unit);
   if (status === 'rejected') {
     const { rowCount } = await pool.query(
-      "DELETE FROM users WHERE id=$1 AND role='recruiter'",
+      "DELETE FROM users WHERE id=$1 AND role='recruiter' AND account_status='pending'",
       [Number(req.params.id)],
     );
-    flash(req, rowCount ? 'Pendaftaran Tim Rekrutmen berhasil ditolak dan akun dihapus dari daftar.' : 'Akun Tim Rekrutmen tidak ditemukan.', rowCount ? 'success' : 'error');
+    flash(req, rowCount ? 'Pendaftaran Tim Rekrutmen berhasil ditolak dan akun dihapus dari daftar.' : 'Akun Tim Rekrutmen tidak ditemukan atau sudah pernah aktif.', rowCount ? 'success' : 'error');
     return res.redirect('/users');
   }
 
@@ -260,12 +271,12 @@ app.post('/users/:id/status', requireAuth, superAdminOnly, requireCsrf, async (r
   res.redirect('/users');
 });
 
-app.post('/users/:id/delete', requireAuth, superAdminOnly, requireCsrf, async (req, res) => {
+app.post('/users/:id/inactivate', requireAuth, superAdminOnly, requireCsrf, async (req, res) => {
   const { rowCount } = await pool.query(
-    "DELETE FROM users WHERE id=$1 AND role='recruiter'",
+    "UPDATE users SET account_status='inactive' WHERE id=$1 AND role='recruiter' AND account_status='active'",
     [Number(req.params.id)],
   );
-  flash(req, rowCount ? 'Akun Tim Rekrutmen berhasil dihapus.' : 'Akun Tim Rekrutmen tidak ditemukan.', rowCount ? 'success' : 'error');
+  flash(req, rowCount ? 'Akun Tim Rekrutmen berhasil dinonaktifkan. Riwayat penilaian tetap tersimpan.' : 'Akun Tim Rekrutmen tidak ditemukan atau sudah nonaktif.', rowCount ? 'success' : 'error');
   res.redirect('/users');
 });
 
@@ -407,7 +418,7 @@ app.post('/periods', requireAuth, superAdminOnly, requireCsrf, async (req, res) 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    await client.query("UPDATE periods SET status='closed' WHERE status='active'");
+    await client.query("UPDATE periods SET status='closed', closed_at=COALESCE(closed_at,CURRENT_TIMESTAMP) WHERE status='active'");
     await client.query(
       "INSERT INTO periods (name,year,status) VALUES ($1,$2,'active')",
       [periodName, Number(req.body.year)],
@@ -419,11 +430,11 @@ app.post('/periods', requireAuth, superAdminOnly, requireCsrf, async (req, res) 
   } finally {
     client.release();
   }
-  flash(req, 'Periode berhasil ditambahkan dan otomatis aktif.');
+  flash(req, 'Periode baru berhasil dibuka dan otomatis aktif. Periode lama diarsipkan sehingga data kandidat baru mulai kosong.');
   res.redirect('/periods');
 });
 app.post('/periods/:id/close', requireAuth, superAdminOnly, requireCsrf, async (req, res) => {
-  const { rowCount } = await pool.query("UPDATE periods SET status='closed' WHERE id=$1 AND status='active'", [Number(req.params.id)]);
+  const { rowCount } = await pool.query("UPDATE periods SET status='closed', closed_at=COALESCE(closed_at,CURRENT_TIMESTAMP) WHERE id=$1 AND status='active'", [Number(req.params.id)]);
   flash(req, rowCount ? 'Periode aktif berhasil ditutup.' : 'Periode sudah ditutup atau tidak ditemukan.', rowCount ? 'success' : 'error');
   res.redirect('/periods');
 });
@@ -434,13 +445,21 @@ app.post('/periods/:id/delete', requireAuth, superAdminOnly, requireCsrf, async 
 });
 
 app.get('/candidates', requireAuth, requireRecruitmentAccess, async (req, res) => {
+  const { rows: periods } = await pool.query('SELECT * FROM periods ORDER BY year DESC,id DESC');
+  const activePeriod = periods.find((period) => period.status === 'active') || periods[0] || null;
+  const rawPeriodId = String(req.query.period_id ?? '').trim();
+  const requestedPeriodId = rawPeriodId === 'all' ? 0 : Number(rawPeriodId || activePeriod?.id || 0);
+  const periodId = requestedPeriodId && periods.some((period) => period.id === requestedPeriodId)
+    ? requestedPeriodId
+    : rawPeriodId === 'all' ? 0 : activePeriod?.id || periods[0]?.id || 0;
   const filters = {
     query: String(req.query.q || '').trim(),
     institutionType: ['smk', 'university'].includes(req.query.institution_type) ? req.query.institution_type : '',
     businessUnit: req.session.user.role === 'recruiter'
       ? req.session.user.business_unit
       : BUSINESS_UNITS.includes(req.query.business_unit) ? req.query.business_unit : '',
-    periodId: Number(req.query.period_id || 0),
+    periodId,
+    periodArchiveMode: rawPeriodId === 'all',
     status: ['not_passed', 'pending', 'accepted'].includes(req.query.status) ? req.query.status : '',
   };
   const conditions = [];
@@ -469,8 +488,7 @@ app.get('/candidates', requireAuth, requireRecruitmentAccess, async (req, res) =
     conditions.push(`c.document_status<>'failed' AND c.selection_status='accepted'`);
   }
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  const [{ rows: periods }, { rows: candidates }, { rows: [{ total: criteriaCount }] }] = await Promise.all([
-    pool.query('SELECT * FROM periods ORDER BY year DESC,id DESC'),
+  const [{ rows: candidates }, { rows: [{ total: criteriaCount }] }] = await Promise.all([
     pool.query(`WITH candidate_rows AS (
         SELECT c.*,p.name AS period_name,p.year,
           (SELECT COUNT(*)::int FROM candidate_scores cs WHERE cs.candidate_id=c.id) AS score_count
@@ -498,8 +516,9 @@ app.get('/candidates', requireAuth, requireRecruitmentAccess, async (req, res) =
         id DESC`, params),
     pool.query('SELECT COUNT(*)::int AS total FROM criteria'),
   ]);
-  const importPeriodId = filters.periodId || periods.find((period) => period.status === 'active')?.id || periods[0]?.id || 0;
-  res.render('candidates', { title: 'Data Kandidat', page: 'candidates', periods, candidates, criteriaCount, filters, importPeriodId });
+  const importPeriodId = activePeriod?.id || periods[0]?.id || 0;
+  const selectedPeriod = filters.periodId ? periods.find((period) => period.id === filters.periodId) || activePeriod : null;
+  res.render('candidates', { title: 'Data Kandidat', page: 'candidates', periods, candidates, criteriaCount, filters, importPeriodId, selectedPeriod, activePeriod });
 });
 app.post('/candidates/import', requireAuth, superAdminOnly, upload.single('spreadsheet'), requireCsrf, async (req, res) => {
   if (!req.file) {

@@ -8,7 +8,7 @@
 <% if (user.role === 'super_admin') { %>
   <div class="card import-card">
     <h2>Import Excel</h2>
-    <p class="muted">Upload Dokumen Spreadsheet Hasil Form Responses Google Form Pendaftaran PKL/Magang</p>
+    <p class="muted">Upload Dokumen Spreadsheet Hasil Form Responses Google Form Pendaftaran PKL/Magang. Data masuk ke periode aktif: <strong><%= activePeriod ? `${activePeriod.name} ${activePeriod.year}` : 'Belum ada periode aktif' %></strong>.</p>
     <form method="post" action="/candidates/import" enctype="multipart/form-data" class="form-grid">
       <input type="hidden" name="csrf" value="<%= csrf %>">
       <input type="hidden" name="period_id" value="<%= importPeriodId %>">
@@ -56,7 +56,7 @@
     <div class="field">
       <label>Periode pendaftaran</label>
       <select name="period_id">
-        <option value="" <%= !filters.periodId ? 'selected' : '' %>>Semua periode</option>
+        <option value="all" <%= filters.periodArchiveMode ? 'selected' : '' %>>Semua periode arsip</option>
         <% for (const period of periods) { %>
           <option value="<%= period.id %>" <%= filters.periodId === period.id ? 'selected' : '' %>><%= period.name %> <%= period.year %></option>
         <% } %>
