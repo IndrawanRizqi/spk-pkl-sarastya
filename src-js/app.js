@@ -65,6 +65,7 @@ app.use((req, res, next) => {
   delete req.session.flash;
   res.locals.businessUnits = BUSINESS_UNITS;
   res.locals.number = (value, digits = 4) => Number(value).toFixed(digits);
+  res.locals.datetime = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(new Date(value)) : 'Belum tercatat';
   next();
 });
 

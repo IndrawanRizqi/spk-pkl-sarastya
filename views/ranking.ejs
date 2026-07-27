@@ -38,16 +38,12 @@
 
 <div class="card quota-card no-print">
   <h2>Kuota Penerimaan</h2>
-  <form method="post" action="/ranking/quota" class="filter-grid">
+  <form method="post" action="/ranking/quota" class="quota-form-grid">
     <input type="hidden" name="csrf" value="<%= csrf %>">
     <input type="hidden" name="period_id" value="<%= periodId %>">
     <input type="hidden" name="business_unit" value="<%= businessUnit %>">
     <div class="field">
-      <label>Unit bisnis</label>
-      <input value="<%= businessUnit %>" disabled>
-    </div>
-    <div class="field">
-      <label>Kuota kandidat diterima</label>
+      <label>Penetapan Kuota Penerimaan</label>
       <input type="number" name="quota" min="0" value="<%= quota %>" required>
     </div>
     <div class="field form-action">
@@ -55,7 +51,7 @@
       <button class="btn">Simpan Kuota</button>
     </div>
   </form>
-  <p class="muted">Kandidat dengan peringkat MABAC sampai batas kuota akan diberi rekomendasi diterima. Keputusan final tetap ditentukan melalui tombol Terima atau Tolak.</p>
+  <p class="muted">Kuota disimpan untuk periode dan unit bisnis yang sedang dipilih pada dropdown di atas. Kandidat dengan peringkat MABAC sampai batas kuota akan diberi rekomendasi diterima.</p>
 </div>
 
 <% if (!swaraReady) { %>
