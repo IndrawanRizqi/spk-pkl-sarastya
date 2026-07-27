@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import pg from 'pg';
+import { RECOMMENDED_SWARA_VERSION, RECOMMENDED_SWARA_WEIGHTS } from './services/decisionSupport.js';
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ export async function initializeDatabase() {
     await seedUsers(client);
     await seedPeriods(client);
     await seedCriteria(client);
+    await applyRecommendedCriteriaWeights(client);
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');
@@ -49,6 +51,30 @@ export async function initializeDatabase() {
   }
 }
 
+
+async function applyRecommendedCriteriaWeights(client) {
+  await client.query(`CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  const { rows: [setting] } = await client.query(
+    "SELECT value FROM app_settings WHERE key='criteria_weight_version'",
+  );
+  if (setting?.value === RECOMMENDED_SWARA_VERSION) return;
+
+  for (const [code, weight] of Object.entries(RECOMMENDED_SWARA_WEIGHTS)) {
+    await client.query('UPDATE criteria SET weight=$1 WHERE code=$2', [weight, code]);
+  }
+
+  await client.query(`UPDATE swara_process_state
+    SET weights_ready=TRUE, updated_at=CURRENT_TIMESTAMP
+    WHERE id=1`);
+  await client.query(`INSERT INTO app_settings (key,value,updated_at)
+    VALUES ('criteria_weight_version',$1,CURRENT_TIMESTAMP)
+    ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=CURRENT_TIMESTAMP`, [RECOMMENDED_SWARA_VERSION]);
+}
 async function seedUsers(client) {
   await client.query("UPDATE users SET role='super_admin', business_unit='', account_status='active' WHERE username IN ('admin','hg')");
 
