@@ -70,7 +70,8 @@
             <th>Instansi</th>
             <th>Peminatan</th>
             <th>Penilai</th>
-            <th>Nilai Si</th>
+                        <th>Waktu Penilaian</th>
+<th>Nilai Si</th>
             <th>Rekomendasi Sistem</th>
             <th>Status</th>
             <% if (user.role === 'recruiter') { %><th class="no-print">Keputusan</th><% } %>
@@ -91,7 +92,13 @@
                   <span class="muted">Belum tercatat</span>
                 <% } %>
               </td>
-              <td><strong><%= number(row.value,6) %></strong></td>
+                            <td>
+                <% if (scorer?.scoredAt) { %>
+                  <span><%= datetime(scorer.scoredAt) %></span>
+                <% } else { %>
+                  <span class="muted">Belum tercatat</span>
+                <% } %>
+              </td>              <td><strong><%= number(row.value,6) %></strong></td>
               <td>
                 <% if (!quota) { %>
                   <span class="badge status-pending">Kuota belum diatur</span>
