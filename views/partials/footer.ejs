@@ -15,8 +15,40 @@
   logoutModal?.addEventListener('click', (event) => {
     if (event.target === logoutModal) setLogoutModal(false);
   });
+  const inactivateModal = document.getElementById('inactivate-account-modal');
+  const inactivateMessage = document.getElementById('inactivate-account-message');
+  const closeInactivate = document.querySelector('[data-close-inactivate]');
+  const submitInactivate = document.querySelector('[data-confirm-inactivate-submit]');
+  let pendingInactivateForm = null;
+  function setInactivateModal(open, form = null) {
+    if (!inactivateModal) return;
+    pendingInactivateForm = open ? form : null;
+    if (open && inactivateMessage && form?.dataset.accountName) {
+      inactivateMessage.textContent = `Akun ${form.dataset.accountName} akan dinonaktifkan dan tidak bisa login sementara. Riwayat penilaian tetap tersimpan.`;
+    }
+    inactivateModal.hidden = !open;
+    document.body.classList.toggle('modal-open', open || !logoutModal?.hidden);
+  }
+  document.querySelectorAll('[data-confirm-inactivate]').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      setInactivateModal(true, form);
+    });
+  });
+  closeInactivate?.addEventListener('click', () => setInactivateModal(false));
+  submitInactivate?.addEventListener('click', () => {
+    const form = pendingInactivateForm;
+    setInactivateModal(false);
+    form?.submit();
+  });
+  inactivateModal?.addEventListener('click', (event) => {
+    if (event.target === inactivateModal) setInactivateModal(false);
+  });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') setLogoutModal(false);
+    if (event.key === 'Escape') {
+      setLogoutModal(false);
+      setInactivateModal(false);
+    }
   });
 </script>
 </body>

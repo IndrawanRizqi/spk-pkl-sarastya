@@ -64,4 +64,14 @@
     </table>
   </div>
 </div>
-<%- include('partials/footer') %>
+<div class="modal-backdrop" id="inactivate-account-modal" hidden>
+  <div class="modal-card danger-modal" role="dialog" aria-modal="true" aria-labelledby="inactivate-account-title">
+    <div class="modal-icon danger-icon">!</div>
+    <h2 id="inactivate-account-title">Nonaktifkan Akun?</h2>
+    <p id="inactivate-account-message">Akun Tim Rekrutmen akan dinonaktifkan dan tidak bisa login sementara. Riwayat penilaian tetap tersimpan.</p>
+    <div class="modal-actions">
+      <button class="btn secondary" type="button" data-close-inactivate>Batal</button>
+      <button class="btn danger" type="button" data-confirm-inactivate-submit>Nonaktifkan</button>
+    </div>
+  </div>
+</div><%- include('partials/footer') %>
