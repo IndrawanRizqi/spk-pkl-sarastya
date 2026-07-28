@@ -83,6 +83,7 @@
     <table>
       <thead>
         <tr>
+          <th>No.</th>
           <th>Nama</th>
           <th>Instansi</th>
           <th>Jenis</th>
@@ -100,11 +101,12 @@
       <tbody>
         <% if (!candidates.length) { %>
           <tr class="empty-table-row">
-            <td colspan="12">Data Tidak Ditemukan</td>
+            <td colspan="13">Data Tidak Ditemukan</td>
           </tr>
         <% } %>
-        <% for (const candidate of candidates) { %>
+        <% for (const [index, candidate] of candidates.entries()) { %>
           <tr>
+            <td class="table-number"><%= pagination.startItem + index %></td>
             <td>
               <% if (candidate.document_status === 'failed') { %>
                 <div class="candidate-link disabled"><strong><%= candidate.name %></strong><span><%= candidate.document_note %></span></div>
@@ -186,6 +188,7 @@
       </tbody>
     </table>
   </div>
+  <%- include('partials/pagination', { pagination, pageQuery: candidatePageQuery, basePath: '/candidates' }) %>
 </div>
 
 <script>

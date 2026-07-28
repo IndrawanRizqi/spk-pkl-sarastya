@@ -131,6 +131,27 @@ function scopedBusinessUnit(req, value) {
   if (req.session.user?.role === 'recruiter') return req.session.user.business_unit;
   return normalizeBusinessUnitInput(value);
 }
+function makePagination(totalItems, rawPage, perPage = 20) {
+  const total = Number(totalItems || 0);
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const parsedPage = Number.parseInt(rawPage, 10);
+  const page = Math.min(Math.max(Number.isFinite(parsedPage) ? parsedPage : 1, 1), totalPages);
+  const offset = (page - 1) * perPage;
+  const pages = [];
+  const start = Math.max(1, page - 2);
+  const end = Math.min(totalPages, page + 2);
+  for (let item = start; item <= end; item += 1) pages.push(item);
+  return {
+    page,
+    perPage,
+    totalItems: total,
+    totalPages,
+    offset,
+    startItem: total ? offset + 1 : 0,
+    endItem: Math.min(offset + perPage, total),
+    pages,
+  };
+}
 
 app.get('/health', (req, res) => res.status(200).send('ok'));
 app.get('/', (req, res) => res.redirect(req.session.user ? '/dashboard' : '/login'));
@@ -519,7 +540,28 @@ app.get('/candidates', requireAuth, requireRecruitmentAccess, async (req, res) =
   ]);
   const importPeriodId = activePeriod?.id || periods[0]?.id || 0;
   const selectedPeriod = filters.periodId ? periods.find((period) => period.id === filters.periodId) || activePeriod : null;
-  res.render('candidates', { title: 'Data Kandidat', page: 'candidates', periods, candidates, criteriaCount, filters, importPeriodId, selectedPeriod, activePeriod });
+  const pagination = makePagination(candidates.length, req.query.page, 20);
+  const pagedCandidates = candidates.slice(pagination.offset, pagination.offset + pagination.perPage);
+  const candidatePageQuery = {
+    q: filters.query,
+    institution_type: filters.institutionType,
+    business_unit: filters.businessUnit,
+    period_id: filters.periodArchiveMode ? 'all' : filters.periodId,
+    status: filters.status,
+  };
+  res.render('candidates', {
+    title: 'Data Kandidat',
+    page: 'candidates',
+    periods,
+    candidates: pagedCandidates,
+    criteriaCount,
+    filters,
+    importPeriodId,
+    selectedPeriod,
+    activePeriod,
+    pagination,
+    candidatePageQuery,
+  });
 });
 app.post('/candidates/import', requireAuth, superAdminOnly, upload.single('spreadsheet'), requireCsrf, async (req, res) => {
   if (!req.file) {
@@ -910,7 +952,26 @@ app.get('/ranking', requireAuth, async (req, res) => {
   const swaraReady = Boolean(swaraState?.weights_ready);
   const result = swaraReady ? calculateMabac(candidates, criteria, scores) : { rows: [], details: {} };
   const quota = Number(quotaRow?.quota || 0);
-  res.render('ranking', { title: 'Rangking Penilaian', page: 'ranking', periods, periodId, businessUnit, criteria, result, swaraReady, quota, scorers });
+  const pagination = makePagination(result.rows.length, req.query.page, 20);
+  const pagedResult = {
+    ...result,
+    rows: result.rows.slice(pagination.offset, pagination.offset + pagination.perPage),
+  };
+  const rankingPageQuery = { period_id: periodId, business_unit: businessUnit };
+  res.render('ranking', {
+    title: 'Rangking Penilaian',
+    page: 'ranking',
+    periods,
+    periodId,
+    businessUnit,
+    criteria,
+    result: pagedResult,
+    swaraReady,
+    quota,
+    scorers,
+    pagination,
+    rankingPageQuery,
+  });
 });
 
 app.use((req, res) => res.status(404).send('Halaman tidak ditemukan.'));

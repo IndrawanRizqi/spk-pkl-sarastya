@@ -1,0 +1,27 @@
+<% if (pagination && pagination.totalPages > 1) { %>
+  <nav class="pagination no-print" aria-label="Navigasi halaman">
+    <%
+      const buildPaginationUrl = (pageNumber) => {
+        const params = new URLSearchParams();
+        for (const [key, value] of Object.entries(pageQuery || {})) {
+          if (value !== undefined && value !== null && String(value) !== '') params.set(key, value);
+        }
+        params.set('page', pageNumber);
+        return `${basePath}?${params.toString()}`;
+      };
+    %>
+    <a class="pagination-item <%= pagination.page <= 1 ? 'disabled' : '' %>" href="<%= pagination.page <= 1 ? '#' : buildPaginationUrl(pagination.page - 1) %>">Sebelumnya</a>
+    <% if (!pagination.pages.includes(1)) { %>
+      <a class="pagination-item" href="<%= buildPaginationUrl(1) %>">1</a>
+      <% if (pagination.pages[0] > 2) { %><span class="pagination-ellipsis">...</span><% } %>
+    <% } %>
+    <% for (const item of pagination.pages) { %>
+      <a class="pagination-item <%= item === pagination.page ? 'active' : '' %>" href="<%= buildPaginationUrl(item) %>"><%= item %></a>
+    <% } %>
+    <% if (!pagination.pages.includes(pagination.totalPages)) { %>
+      <% if (pagination.pages[pagination.pages.length - 1] < pagination.totalPages - 1) { %><span class="pagination-ellipsis">...</span><% } %>
+      <a class="pagination-item" href="<%= buildPaginationUrl(pagination.totalPages) %>"><%= pagination.totalPages %></a>
+    <% } %>
+    <a class="pagination-item <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>" href="<%= pagination.page >= pagination.totalPages ? '#' : buildPaginationUrl(pagination.page + 1) %>">Berikutnya</a>
+  </nav>
+<% } %>

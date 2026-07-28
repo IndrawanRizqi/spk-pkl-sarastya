@@ -172,6 +172,12 @@ input:focus, select:focus { outline: 3px solid rgba(146,58,159,.14); border-colo
 .empty-table-row td { background: #fff0ee; color: var(--danger); font-weight: 800; text-align: center; padding: 18px; }
 
 .table-wrap { overflow: auto; }
+.table-number { color: var(--brand-deep); font-weight: 800; text-align: center; }
+.pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.pagination-item, .pagination-ellipsis { min-width: 38px; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: white; color: var(--ink); font-weight: 800; text-align: center; }
+.pagination-item.active { background: linear-gradient(135deg, var(--brand), var(--brand-pink)); border-color: transparent; color: white; box-shadow: 0 8px 18px rgba(157, 59, 164, .18); }
+.pagination-item.disabled { opacity: .45; pointer-events: none; }
+.pagination-ellipsis { border-color: transparent; background: transparent; color: var(--muted); min-width: 20px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { background: #f8fafb; color: #475467; font-size: 12px; text-align: left; }
 th, td { border-bottom: 1px solid var(--line); padding: 12px 10px; vertical-align: middle; }

@@ -112,6 +112,7 @@
                     <form method="post" action="/candidates/<%= row.candidate.id %>/status">
                       <input type="hidden" name="csrf" value="<%= csrf %>">
                       <input type="hidden" name="period_id" value="<%= periodId %>">
+                      <input type="hidden" name="page" value="<%= pagination.page %>">
                       <input type="hidden" name="business_unit" value="<%= businessUnit %>">
                       <input type="hidden" name="status" value="accepted">
                       <button class="btn small">Terima</button>
@@ -119,6 +120,7 @@
                     <form method="post" action="/candidates/<%= row.candidate.id %>/status">
                       <input type="hidden" name="csrf" value="<%= csrf %>">
                       <input type="hidden" name="period_id" value="<%= periodId %>">
+                      <input type="hidden" name="page" value="<%= pagination.page %>">
                       <input type="hidden" name="business_unit" value="<%= businessUnit %>">
                       <input type="hidden" name="status" value="rejected">
                       <button class="btn danger small">Tolak</button>
