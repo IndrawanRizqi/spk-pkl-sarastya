@@ -36,7 +36,7 @@
       <input type="hidden" name="period_id" value="<%= periodId %>">
       <input type="hidden" name="business_unit" value="<%= businessUnit %>">
       <div class="field">
-        <label>Atur Kuota Penerimaan Setiap Unit Bisnis</label>
+        <label>Kuota diterima</label>
         <input type="number" name="quota" min="0" value="<%= quota %>" required>
       </div>
       <div class="field form-action">
@@ -49,13 +49,6 @@
       <button class="btn secondary" type="button" onclick="window.print()">Cetak Hasil</button>
     </div>
   </div>
-</div>
-    <div class="field form-action">
-      <label>&nbsp;</label>
-      <button class="btn">Simpan Kuota</button>
-    </div>
-  </form>
-  <p class="muted">Kuota disimpan untuk periode dan unit bisnis yang sedang dipilih pada dropdown di atas. Kandidat dengan peringkat MABAC sampai batas kuota akan diberi rekomendasi diterima.</p>
 </div>
 
 <% if (!swaraReady) { %>

@@ -141,11 +141,12 @@ button, input, select { font: inherit; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
 .filter-card { margin-top: -6px; }
 .filter-grid { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(220px, .8fr) auto; gap: 15px; align-items: end; }
-.ranking-control-card { margin-top: -6px; }
-.ranking-control-grid { display: grid; grid-template-columns: minmax(360px, 1.5fr) minmax(300px, 1fr) auto; gap: 15px; align-items: end; }
-.ranking-filter-form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr); gap: 15px; align-items: end; }
-.ranking-quota-form { display: grid; grid-template-columns: minmax(190px, 1fr) auto; gap: 15px; align-items: end; }
+.ranking-control-card { margin-top: -6px; margin-bottom: 22px; }
+.ranking-control-grid { display: grid; grid-template-columns: minmax(230px, 1fr) minmax(230px, 1fr) minmax(150px, 190px) auto auto; gap: 15px; align-items: end; }
+.ranking-filter-form { display: contents; }
+.ranking-quota-form { display: contents; }
 .ranking-print-action { justify-content: end; }
+.ranking-quota-form .btn, .ranking-print-action .btn { width: auto; min-width: 120px; white-space: nowrap; }
 .quota-form-grid { display: grid; grid-template-columns: minmax(240px, 1fr) auto; gap: 15px; align-items: end; max-width: 720px; }
 .candidate-search-grid { display: grid; grid-template-columns: minmax(280px, 1.4fr) 150px minmax(180px, .8fr) minmax(180px, .8fr) 160px 150px; gap: 14px; align-items: end; margin-bottom: 10px; }
 .field { display: grid; gap: 7px; }
@@ -294,8 +295,8 @@ tr:last-child td { border-bottom: 0; }
     .dashboard-head { align-items: stretch; flex-direction: column; }
     .dashboard-filter { min-width: 0; width: 100%; }
     .chart-card.wide { grid-column: 1 / -1; }
-    .filter-grid, .quota-form-grid, .ranking-control-grid { grid-template-columns: 1fr; }
-  .ranking-filter-form, .ranking-quota-form { grid-template-columns: 1fr 1fr; }
+    .filter-grid, .quota-form-grid, .ranking-control-grid { display: grid; grid-template-columns: minmax(230px, 1fr) minmax(230px, 1fr) minmax(150px, 190px) auto auto; gap: 15px; align-items: end; }
+  .ranking-filter-form, .ranking-quota-form { display: contents; }
     .candidate-search-grid { grid-template-columns: 1fr 1fr; }
     .candidate-profile { grid-template-columns: 1fr 1fr; }
     .candidate-video-card { align-items: flex-start; flex-direction: column; }
