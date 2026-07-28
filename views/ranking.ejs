@@ -6,46 +6,50 @@
   </div>
 </div>
 
-<div class="card filter-card no-print">
-  <form method="get" class="filter-grid">
-    <div class="field">
-      <label>Periode seleksi</label>
-      <select name="period_id" onchange="this.form.submit()">
-        <% for (const period of periods) { %>
-          <option value="<%= period.id %>" <%= periodId === period.id ? 'selected' : '' %>><%= period.name %> <%= period.year %></option>
-        <% } %>
-      </select>
-    </div>
-    <div class="field">
-      <label>Unit bisnis</label>
-      <% if (user.role === 'recruiter') { %>
-        <input type="hidden" name="business_unit" value="<%= businessUnit %>">
-        <input value="<%= businessUnit %>" disabled>
-      <% } else { %>
-        <select name="business_unit" onchange="this.form.submit()">
-          <% for (const unit of businessUnits) { %>
-            <option value="<%= unit %>" <%= businessUnit === unit ? 'selected' : '' %>><%= unit %></option>
+<div class="card ranking-control-card no-print">
+  <div class="ranking-control-grid">
+    <form method="get" class="ranking-filter-form">
+      <div class="field">
+        <label>Periode seleksi</label>
+        <select name="period_id" onchange="this.form.submit()">
+          <% for (const period of periods) { %>
+            <option value="<%= period.id %>" <%= periodId === period.id ? 'selected' : '' %>><%= period.name %> <%= period.year %></option>
           <% } %>
         </select>
-      <% } %>
-    </div>
-    <div class="field form-action">
+      </div>
+      <div class="field">
+        <label>Unit bisnis</label>
+        <% if (user.role === 'recruiter') { %>
+          <input type="hidden" name="business_unit" value="<%= businessUnit %>">
+          <input value="<%= businessUnit %>" disabled>
+        <% } else { %>
+          <select name="business_unit" onchange="this.form.submit()">
+            <% for (const unit of businessUnits) { %>
+              <option value="<%= unit %>" <%= businessUnit === unit ? 'selected' : '' %>><%= unit %></option>
+            <% } %>
+          </select>
+        <% } %>
+      </div>
+    </form>
+    <form method="post" action="/ranking/quota" class="ranking-quota-form">
+      <input type="hidden" name="csrf" value="<%= csrf %>">
+      <input type="hidden" name="period_id" value="<%= periodId %>">
+      <input type="hidden" name="business_unit" value="<%= businessUnit %>">
+      <div class="field">
+        <label>Atur Kuota Penerimaan Setiap Unit Bisnis</label>
+        <input type="number" name="quota" min="0" value="<%= quota %>" required>
+      </div>
+      <div class="field form-action">
+        <label>&nbsp;</label>
+        <button class="btn">Simpan Kuota</button>
+      </div>
+    </form>
+    <div class="field form-action ranking-print-action">
       <label>&nbsp;</label>
       <button class="btn secondary" type="button" onclick="window.print()">Cetak Hasil</button>
     </div>
-  </form>
+  </div>
 </div>
-
-<div class="card quota-card no-print">
-  <h2>Kuota Penerimaan</h2>
-  <form method="post" action="/ranking/quota" class="quota-form-grid">
-    <input type="hidden" name="csrf" value="<%= csrf %>">
-    <input type="hidden" name="period_id" value="<%= periodId %>">
-    <input type="hidden" name="business_unit" value="<%= businessUnit %>">
-    <div class="field">
-      <label>Penetapan Kuota Penerimaan</label>
-      <input type="number" name="quota" min="0" value="<%= quota %>" required>
-    </div>
     <div class="field form-action">
       <label>&nbsp;</label>
       <button class="btn">Simpan Kuota</button>
