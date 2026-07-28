@@ -535,7 +535,8 @@ app.get('/candidates', requireAuth, requireRecruitmentAccess, async (req, res) =
       WHERE duplicate_rank=1
       ORDER BY
         CASE WHEN document_status='failed' OR selection_status='rejected' THEN 1 ELSE 0 END,
-        id DESC`, params),
+        LOWER(TRIM(name)) ASC,
+        id ASC`, params),
     pool.query('SELECT COUNT(*)::int AS total FROM criteria'),
   ]);
   const importPeriodId = activePeriod?.id || periods[0]?.id || 0;
